@@ -144,6 +144,26 @@ public class MyTestingAI {
 		return path != null ;		
 	}
 	
+	/**
+	 * Given an unreachable door d, find a closed door d2 that if it is open would make
+	 * d reachable.
+	 */
+	String findAEnablingClosedDoor(String door) {
+		for(String d2 : doors) {
+			if (d2.equals(door)) continue ;
+			if(!agent.getState().isOpen(d2) && doorIsReachable(d2)) {
+				LabEntity d2_ = agent.getState().worldmodel.getElement(d2) ;
+				d2_.properties.put("isOpen",true) ;
+				if(doorIsReachable(door)) {
+					d2_.properties.put("isOpen",false) ;
+					return d2_.id ;
+				}
+				d2_.properties.put("isOpen",false) ;
+			}
+		}
+		return null ;
+	}
+	
 	boolean doorIsOpen(String door) {
 		return agent.getState().isOpen(door) ;
 	}
@@ -191,9 +211,26 @@ public class MyTestingAI {
 				// if the door is closed try to open it
 				
 				// But firstly, if this door is not even reachable, find first
-				// a closed door in the open set, that is reachable. We swap their order
-				// in the open set to open this one first.
+				// a closed door that would make the door reachable:
 				if (! doorIsReachable(nextDoorToOpen)) {
+					String enablingDoor = findAEnablingClosedDoor(nextDoorToOpen) ;
+					if(enablingDoor != null) {
+						if(openSet.contains(enablingDoor)) {
+							openSet.remove(enablingDoor) ;
+						}
+						openSet.add(0,enablingDoor) ;
+						nextDoorToOpen = enablingDoor ;	
+					}
+					else { 
+						// if we can't find an enabling door, then put nextDoorToOpen to the back
+						// of the openSet, if it has more than one element:
+						if (openSet.size()>0) {
+							openSet.remove(0) ;
+							openSet.add(nextDoorToOpen) ;
+							nextDoorToOpen = openSet.get(0) ;
+ 						}
+					}				
+					/*
 					List<String> alternatives = openSet.stream()
 							     .filter(D -> ! doorIsOpen(D) && doorIsReachable(D))
 							     .collect(Collectors.toList()) ;	
@@ -204,6 +241,7 @@ public class MyTestingAI {
 						openSet.add(0, alt);
 						nextDoorToOpen = alt ;
 					}
+					*/
 				}
 				
 				int numberOfFoundButtons0 = buttons.size() ;

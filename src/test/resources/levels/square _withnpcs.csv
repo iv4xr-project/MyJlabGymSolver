@@ -1,0 +1,13 @@
+cop1,p1,p2,,,,,,,
+cop2,p3,p2,,,,,,,
+button0,,,,,,,,,
+|w,w,w,w,w,w,w,w,w,w
+w,f:a^agent0,f,f,f:npc^cop1,f:ng^p2,f,f,f:a^agent2,w
+w,f,f,f,f,f,f,f,f,w
+w,f,f,f,f,f,f,f,f,w
+w,f:ng^p1,f,f,f:b^button0,f,f,f,f:ng^p3,w
+w,f,f,f,f,f,f,f,f,w
+w,f,f,f,f,f,f,f,f,w
+w,f,f,f,f,f,f,f,f,w
+w,f:a^agent1,f,f,f:npc^cop2,f,f,f,f:a^agent3,w
+w,w,w,w,w,w,w,w,w,w
