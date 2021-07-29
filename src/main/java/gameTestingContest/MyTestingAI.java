@@ -30,7 +30,12 @@ public class MyTestingAI {
 	public MyTestingAI() {
 	}
 
+	//static boolean DEBUG_MODE = true ;
+	static boolean DEBUG_MODE = false ;
+	
+	
 	static void pressEnter() {
+		if(! DEBUG_MODE) return ;
 		System.out.println("Hit RETURN to continue.");
 		new Scanner(System.in).nextLine();
 	}
@@ -70,7 +75,7 @@ public class MyTestingAI {
 		connections.add(new Pair(b.id, d.id)) ;	
 	}
 	
-	public static int BUDGET_PER_TASK = 120 ;
+	public static int BUDGET_PER_TASK = 150 ;
 	
 	// FRAGILE!
 	WorldEntity lastInteractedButton = null ;
@@ -138,10 +143,20 @@ public class MyTestingAI {
 		// pretend that the door is open:
 		door.properties.put("isOpen",true) ;
 		// check its reachability:
-		var path = agent.getState().findPathTo(door.getFloorPosition(),true) ;
+		var entity_location = door.getFloorPosition() ;
+		var entity_sqcenter = new Vec3((float) Math.floor((double) entity_location.x - 0.5f) + 1f,
+	    		entity_location.y,
+	    		(float) Math.floor((double) entity_location.z - 0.5f) + 1f) ;
+		var path = agent.getState().findPathTo(entity_sqcenter,true) ;
 		// restore the original state:
 		door.properties.put("isOpen",originalState) ;
 		return path != null ;		
+	}
+	
+	boolean buttonIsReachable(String button) {
+		LabEntity b = agent.getState().worldmodel.getElement(button) ;
+		var path = agent.getState().findPathTo(b.getFloorPosition(),true) ;
+		return path != null ;
 	}
 	
 	/**
@@ -176,22 +191,41 @@ public class MyTestingAI {
 		// a door becomes closed and completely cut-off the door.
 		// Below we will use entityInCloseRange() instead.
 		
-		if(connectedButtons.size()>0) {
-			for(String button : connectedButtons) {
-				GoalStructure G = SEQ(entityInteracted(button),entityInCloseRange(door))  ;
-				solveGoal("Toggling " + button + " to open " + door, G) ;
-				WorldEntity d_ = agent.getState().worldmodel.getElement(door) ;
-				if (G.getStatus().success() && d_ != null && agent.getState().isOpen(door)) {
-					log(">> " + door + " is open.") ;
-					return ;
-				}
+		for (String button : connectedButtons) {
+			if (! buttonIsReachable(button)) continue ;
+			GoalStructure G = SEQ(entityInteracted(button), 
+					              FIRSTof(entityInCloseRange(door), entityStateRefreshed(door)));
+			solveGoal("Toggling " + button + " to open " + door, G);
+			/*
+			if(! doorIsReachable(door)) {
+				// well ... the button also close another door that makes the target door unreachable.
+				// reset the button then:
+				solveGoal("Re-setting  " + button + " as it makes " + door + " unreachable", entityInteracted(button));
+			    continue ;	
+			}
+			*/
+			WorldEntity d_ = agent.getState().worldmodel.getElement(door);
+			if (G.getStatus().success() && d_ != null && agent.getState().isOpen(door)) {
+				log(">> " + door + " is open.");
+				return;
 			}
 		}
 		// no connections known:
 		List<WorldEntity> candidates = agent.getState().knownButtons() ; 
 		for(WorldEntity button : candidates) {
-			GoalStructure G = SEQ(entityInteracted(button.id),entityInCloseRange(door))  ;
+			if (! buttonIsReachable(button.id)) continue ;
+			GoalStructure G = SEQ(entityInteracted(button.id),
+					              FIRSTof(entityInCloseRange(door), entityStateRefreshed(door))
+					              )  ;
 			solveGoal("Toggling " + button.id + " to open " + door, G) ;
+			/*
+			if(! doorIsReachable(door)) {
+				// well ... the button also close another door that makes the target door unreachable.
+				// reset the button then:
+				solveGoal("Re-setting  " + button + " as it makes " + door + " unreachable", entityInteracted(button.id));
+			    continue ;	
+			}
+			*/
 			WorldEntity d_ = agent.getState().worldmodel.getElement(door) ;
 			if (G.getStatus().success() && d_ != null && agent.getState().isOpen(door)) {
 				log(">> " + door + " is open.") ;
@@ -335,11 +369,16 @@ public class MyTestingAI {
 
 		Thread.sleep(500) ;
 
-		pressEnter();
-		
-		explorationAlg() ;
+		try {
+			pressEnter();
+			
+			explorationAlg() ;
 
-		pressEnter();
+			pressEnter();
+		}
+		catch(Exception e) {
+			// when the thread crashes of interrupted due to timeout:
+		}
 
 		return connections;
 	}
