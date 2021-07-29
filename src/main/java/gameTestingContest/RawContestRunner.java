@@ -28,7 +28,7 @@ public class RawContestRunner {
      * bar/foo/gym/Windows/bin/LabRecruits.exe, then the root directory is
      * bar/foo/gym.
      */
-    static String labRecruitesExeRootDir = null;
+    static String labRecruitesExeRootDir = System.getProperty("user.dir") ;
 
     /**
      * Specify here the name of the level that you want to load. if the name is
@@ -36,13 +36,13 @@ public class RawContestRunner {
      * definition of this level. This csv file will be loaded to Lab Recruits, which
      * in turn will generate the corresponding game content.
      */
-    static String levelName = null;
+    static String levelName = "BM2021_diff1_R4_1_1_M" ;
 
     /**
      * Specify hefre the path to the directory where the level-file referred to by
      * {@link #levelName} above is stored.
      */
-    static String levelsDir = null;
+    static String levelsDir = labRecruitesExeRootDir + "/src/test/resources/levels/contest";
 
     static LabRecruitsTestServer labRecruitsBinding;
 
