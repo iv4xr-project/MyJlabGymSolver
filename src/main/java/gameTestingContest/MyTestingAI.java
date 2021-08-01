@@ -32,21 +32,39 @@ public class MyTestingAI {
 	 */
 	int turn = 0 ;
 	
-	Random rnd = new Random() ;
-
-	public static int BUDGET_PER_TASK = 150 ;
-	
-	public MyTestingAI() { }
-
-
+	/**
+	 * The test-agent that will be used to run the exploration algorithm.
+	 */
 	LabRecruitsTestAgent agent ;
 	
-	XBelief getBelief() {
+	Random rnd = new Random() ;
+
+	/**
+	 * The max. number of turns that each goal-based task will be allowed. If this is
+	 * exceeded the task will be dropped.
+	 */
+	public static int BUDGET_PER_TASK = 150 ;
+	
+	/**
+	 * To keep track which button the agent toggled last.
+	 */
+	// FRAGILE!
+	WorldEntity lastInteractedButton = null;
+
+    public MyTestingAI() { }
+	
+	/**
+	 * Just returning the BeliefState of the test agent.
+	 */
+	private XBelief getBelief() {
 		return (XBelief) agent.getState() ;
 	}
 	
-	
-	void registerFoundGameObjects() {
+	/**
+	 * Register all buttons and doors currently in the agent's belief to the models
+	 * of rooms and connections that it keeps track.
+	 */
+	private void registerFoundGameObjects() {
 		for(WorldEntity e : getBelief().knownButtons()) {
 			getBelief().registerButton(e.id);
 		}
@@ -55,11 +73,15 @@ public class MyTestingAI {
 		}
 	}
 	
-	
-	
-	// FRAGILE!
-	WorldEntity lastInteractedButton = null ;
-	
+
+	/**
+	 * Assign the given goal-structure to the test agent and runs the agent to solve this goal.
+	 * There is a time budget for this. If the max. number of turns is used up, the goal is dropped.
+	 * 
+	 * As the agent executes, it will also update the rooms and connections models on the fly based
+	 * on what it observes (e.g. when it sees a button, or when it interacts on a button, or when it
+	 * notices that a door changes state).
+	 */
 	void solveGoal(String goalDesc, GoalStructure G) throws Exception {
 		DebugUtil.log("*** Deploying a goal: " + goalDesc) ;
 		getBelief().clearGoalLocation();
@@ -103,6 +125,9 @@ public class MyTestingAI {
 		DebugUtil.log("*** Goal " + goalDesc + " terminated. Consumed turns: " + i + ". Status: " + G.getStatus()) ;
 	}
 	
+	/**
+	 * Instruct the agent to explore the level. By this we mean exploring still unvisited (but reachable) nav-nodes.
+	 */
 	void doExplore() throws Exception {
 		Goal explored = goal("exploring").toSolve((BeliefState S) -> false).withTactic(FIRSTof(explore(), ABORT()));
 		var G =  FIRSTof(explored.lift(), SUCCESS());
@@ -167,7 +192,10 @@ public class MyTestingAI {
 		}
 	}
 	
-	List<String> shuffle(List<String> z) {
+	/**
+	 * Copy a list, and randomly shuffling the result.
+	 */
+	private List<String> shuffle(List<String> z) {
 		List<String> S = new LinkedList<>() ;
 		List<String> R = new LinkedList<>() ;
 		S.addAll(z) ;
@@ -203,6 +231,10 @@ public class MyTestingAI {
 			}
 		}
 	}
+	
+	/**
+	 * This is the exploration algorithm.
+	 */
 	void explorationAlg() throws Exception {
 		Set<String> closedSet = new HashSet<>() ;
 		List<String> openSet = new LinkedList<>() ;
@@ -259,7 +291,7 @@ public class MyTestingAI {
 				int numberOfFoundButtons0 = getBelief().knownButtons().size() ;
 
 				openDoor(nextDoorToOpen) ;
-				//agent.getState().pathfinder.wipeOutMemory();
+				//agent.getState().pathfinder.wipeOutMemory();  --> let's not do this as it makes things more complicated
 
 				doExplore() ;
 
