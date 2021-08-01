@@ -233,9 +233,32 @@ public class MyTestingAI {
 	}
 	
 	/**
-	 * This is the exploration algorithm.
+	 * This is the exploration algorithm. It works as follows:
+	 * 
+	 * Maintain two sets: closed-set and open-list. Intially they are empty.
+	 * 
+	 *   (1) Explore. Append newly discovered doors to the open-list (at the back).
+	 *   (2)If the open-list is empty we are DONE. 
+	 *      Else, remove the first door D from the open-list:
+	 *         (2a) if D is already open, move it to the closed-set. Go back to 1.
+	 *         (2b) Else try to open D. If D is not even reachable, try to do
+	 *              something (e.g. opening a door) to make D reachable.
+	 *              Note that we don't know if D can be opened at all, so we may
+	 *              put some time out here.
+	 *              At the end, whether or not we can open D, we are done with it
+	 *              and put it in the closed-set.
+	 *              Go back to 1.
+	 *               
+	 * In step 2b, to open D we will have to try out various buttons.
+	 * 
+	 * Discovered connections are kept track as we go, as follows: 
+	 * 
+	 * (1) we keep track which button B was last interacted by the agent.
+	 * (2) whenever the agent notices that a door D changes state, this must be caused by
+	 *     the interaction on B. So it adds the connection B->D to its memory.
+	 * 
 	 */
-	void explorationAlg() throws Exception {
+	void explorationAlgorithm() throws Exception {
 		Set<String> closedSet = new HashSet<>() ;
 		List<String> openSet = new LinkedList<>() ;
 		doExplore() ;
@@ -309,8 +332,26 @@ public class MyTestingAI {
 			}
 			openSet.remove(0) ;
 			closedSet.add(nextDoorToOpen) ;
-		}
-		
+		}	
+	}
+	
+	
+	void randomExplorationAlgorithm() throws Exception {
+		int budget = 7500 ;
+		while (true) {
+			if(turn >= budget) {
+				break ;
+			}
+			doExplore() ;
+			var buttons = getBelief().knownButtons() ;
+			var doors = getBelief().knownDoors() ;
+			if(buttons.isEmpty()  || doors.isEmpty()) {
+				break ;
+			}
+			WorldEntity B0 = buttons.get(rnd.nextInt(buttons.size())) ;
+			WorldEntity D0 = doors.get(rnd.nextInt(doors.size())) ;
+			checkButtonDoorPair(B0.id,D0.id) ;
+		}		
 	}
 
 	/**
@@ -375,8 +416,13 @@ public class MyTestingAI {
 		try {
 			DebugUtil.pressEnter();
 			
-			explorationAlg() ;
-
+			// Run the exploration algorithm:
+			switch(MyConfig.ALG) {
+			   case "Random" : randomExplorationAlgorithm() ; break ;
+			   
+			   default : explorationAlgorithm() ;
+			}
+			
 		}
 		catch(AgentDieException e) {
 		}
