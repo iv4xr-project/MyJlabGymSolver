@@ -27,68 +27,48 @@ import world.LabEntity;
  */
 public class MyTestingAI {
 
-	public MyTestingAI() {
-	}
-
-	//static boolean DEBUG_MODE = true ;
-	static boolean DEBUG_MODE = false ;
-	
-	
-	static void pressEnter() {
-		if(! DEBUG_MODE) return ;
-		System.out.println("Hit RETURN to continue.");
-		new Scanner(System.in).nextLine();
-	}
-
-	static GoalStructure explored() {
-		Goal explored = goal("exploring").toSolve((BeliefState S) -> false).withTactic(FIRSTof(explore(), ABORT()));
-		return FIRSTof(explored.lift(), SUCCESS());
-	}
-	
-	static void log(String s) {
-		System.out.println(s) ;
-	}
-
-	LabRecruitsTestAgent agent ;
-	Set<String> doors = new HashSet<>();
-	Set<String> buttons = new HashSet<>();
-	Set<Pair<String, String>> connections = new HashSet<>();
+	/**
+	 * To keep track the number of agent.updates() done so far.
+	 */
 	int turn = 0 ;
 	
+	Random rnd = new Random() ;
+
+	public static int BUDGET_PER_TASK = 150 ;
+	
+	public MyTestingAI() { }
+
+
+	LabRecruitsTestAgent agent ;
+	
+	XBelief getBelief() {
+		return (XBelief) agent.getState() ;
+	}
+	
+	
 	void registerFoundGameObjects() {
-		for(WorldEntity e : agent.getState().knownButtons()) {
-			if(! buttons.contains(e.id)) {
-				log(">> registering " + e.id) ;
-				buttons.add(e.id) ;
-			}
+		for(WorldEntity e : getBelief().knownButtons()) {
+			getBelief().registerButton(e.id);
 		}
 		for(WorldEntity e : agent.getState().knownDoors()) {
-			if(! doors.contains(e.id)) {
-				log(">> registering " + e.id) ;
-				doors.add(e.id) ;						
-			}
+			getBelief().registerDoor(e.id);
 		}
 	}
 	
-	void registerConnection(WorldEntity b, WorldEntity d) {
-		log(">> registering connection " + b.id + " --> " + d.id) ;
-		connections.add(new Pair(b.id, d.id)) ;	
-	}
 	
-	public static int BUDGET_PER_TASK = 150 ;
 	
 	// FRAGILE!
 	WorldEntity lastInteractedButton = null ;
 	
-	void solveGoal(String goalDesc, GoalStructure G) throws InterruptedException {
-		log("*** Deploying a goal: " + goalDesc) ;
-		agent.getState().clearGoalLocation();
-		agent.getState().clearStuckTrackingInfo();
+	void solveGoal(String goalDesc, GoalStructure G) throws Exception {
+		DebugUtil.log("*** Deploying a goal: " + goalDesc) ;
+		getBelief().clearGoalLocation();
+		getBelief().clearStuckTrackingInfo();
 		agent.setGoal(G) ;
 		int i=0 ;
 		//WorldEntity lastInteractedButton = null ;
 		while (G.getStatus().inProgress()) {
-			log("*** " + turn + ", " + agent.getState().id + " @" + agent.getState().worldmodel.position);
+			DebugUtil.log("*** " + turn + ", " + agent.getState().id + " @" + agent.getState().worldmodel.position);
 			Thread.sleep(50);
 			i++; turn++ ;
 			agent.update();
@@ -97,7 +77,7 @@ public class MyTestingAI {
 			// check if a button is just interacted:
 			for(WorldEntity e: agent.getState().changedEntities) {
 				if(e.type.equals("Switch") && e.hasPreviousState()) {
-					log(">> detecting interaction with " + e.id) ;
+					DebugUtil.log(">> detecting interaction with " + e.id) ;
 					lastInteractedButton = e ;					
 				}
 			}
@@ -105,9 +85,14 @@ public class MyTestingAI {
 			if(lastInteractedButton != null) {
 				for(WorldEntity e: agent.getState().changedEntities) {
 					if(e.type.equals("Door") && e.hasPreviousState()) {
-						registerConnection(lastInteractedButton,e) ;
+						getBelief().registerConnection(lastInteractedButton.id,e.id) ;
 					}	
 				}
+			}
+			
+			if(getBelief().worldmodel.health <= 0) {
+				DebugUtil.log(">>>> the agent died. Aaaw.");
+				throw new AgentDieException() ;
 			}
 			
 			if (i > BUDGET_PER_TASK) {
@@ -115,142 +100,135 @@ public class MyTestingAI {
 			}
 		}
 		// agent.printStatus();	
-		log("*** Goal " + goalDesc + " terminated. Consumed turns: " + i + ". Status: " + G.getStatus()) ;
+		DebugUtil.log("*** Goal " + goalDesc + " terminated. Consumed turns: " + i + ". Status: " + G.getStatus()) ;
 	}
 	
-	void doExplore() throws InterruptedException {
-		solveGoal("Exploring", explored()) ;
-	}
-	
-	
-	Set<String> getConnectedButtons(String door) {
-		Set<String> candidates = new HashSet<>() ;
-		for(var c : connections) {
-			if(c.snd.equals(door)) {
-				candidates.add(c.fst) ;
-			}
-		}
-		return candidates ;
-	}
-	
-	boolean doorIsReachable(String door) {
-		LabEntity d = agent.getState().worldmodel.getElement(door) ;
-		return doorIsReachable(d) ;
-	}
-	
-	boolean doorIsReachable(LabEntity door) {
-		Boolean originalState = door.getBooleanProperty("isOpen") ;
-		// pretend that the door is open:
-		door.properties.put("isOpen",true) ;
-		// check its reachability:
-		var entity_location = door.getFloorPosition() ;
-		var entity_sqcenter = new Vec3((float) Math.floor((double) entity_location.x - 0.5f) + 1f,
-	    		entity_location.y,
-	    		(float) Math.floor((double) entity_location.z - 0.5f) + 1f) ;
-		var path = agent.getState().findPathTo(entity_sqcenter,true) ;
-		// restore the original state:
-		door.properties.put("isOpen",originalState) ;
-		return path != null ;		
-	}
-	
-	boolean buttonIsReachable(String button) {
-		LabEntity b = agent.getState().worldmodel.getElement(button) ;
-		var path = agent.getState().findPathTo(b.getFloorPosition(),true) ;
-		return path != null ;
+	void doExplore() throws Exception {
+		Goal explored = goal("exploring").toSolve((BeliefState S) -> false).withTactic(FIRSTof(explore(), ABORT()));
+		var G =  FIRSTof(explored.lift(), SUCCESS());
+		solveGoal("Exploring", G) ;
 	}
 	
 	/**
-	 * Given an unreachable door d, find a closed door d2 that if it is open would make
-	 * d reachable.
+	 * Move the agent towards a door to get its actual current state. This assumes the door
+	 * is reachable.
+	 * @throws InterruptedException 
 	 */
-	String findAEnablingClosedDoor(String door) {
-		for(String d2 : doors) {
-			if (d2.equals(door)) continue ;
-			if(!agent.getState().isOpen(d2) && doorIsReachable(d2)) {
-				LabEntity d2_ = agent.getState().worldmodel.getElement(d2) ;
-				d2_.properties.put("isOpen",true) ;
-				if(doorIsReachable(door)) {
-					d2_.properties.put("isOpen",false) ;
-					return d2_.id ;
-				}
-				d2_.properties.put("isOpen",false) ;
-			}
-		}
-		return null ;
+	boolean getActualDoorState(String door) throws Exception {
+		GoalStructure G = FIRSTof(entityInCloseRange(door), entityStateRefreshed(door)) ;
+		solveGoal("Sampling the state of " + door, G);
+		return getBelief().isOpen(door) ;	      
 	}
 	
-	boolean doorIsOpen(String door) {
-		return agent.getState().isOpen(door) ;
-	}
 	
-	void openDoor(String door) throws InterruptedException {
-		Set<String> connectedButtons = getConnectedButtons(door) ;
-		
+	/**
+	 * Toggle the button, then check the door state. 
+	 * Pre-condition: the door should be reachable from the current agent location, and the door
+	 * is closed.
+	 * @throws InterruptedException 
+	 */
+	void checkButtonDoorPair(String button, String door) throws Exception {
 		// Don't use entityStateRefreshed() here as it logic assumes there is a nav-node
 		// from where the door can be seen by the agent, which won't be the case if
 		// a door becomes closed and completely cut-off the door.
-		// Below we will use entityInCloseRange() instead.
+		// Below we will use entityInCloseRange() as first option instead.
+		GoalStructure G = SEQ(entityInteracted(button), 
+	              FIRSTof(entityInCloseRange(door), entityStateRefreshed(door)));
+		boolean buttonOldState = getBelief().isOn(button) ;
+        solveGoal("Toggling " + button + " to open " + door, G);
+        boolean buttonNewState = getBelief().isOn(button) ;
+        boolean isOpen = getBelief().isOpen(door) ;
+        if(buttonOldState == buttonNewState) return ;
+        if(isOpen) {
+        	// no need to register the connection. This is registred automatically by solveGoal().
+        }
+        else {
+        	// register the non-connection:
+        	getBelief().registerNONConnection(button, door);
+        }
+	}
+	
+	/**
+	 * Try to open the given door. This assumes that the door is reachable from the agent current
+	 * position, and is currently closed.
+	 */
+	void openDoor(String door) throws Exception {
 		
-		for (String button : connectedButtons) {
-			if (! buttonIsReachable(button)) continue ;
-			GoalStructure G = SEQ(entityInteracted(button), 
-					              FIRSTof(entityInCloseRange(door), entityStateRefreshed(door)));
-			solveGoal("Toggling " + button + " to open " + door, G);
-			/*
-			if(! doorIsReachable(door)) {
-				// well ... the button also close another door that makes the target door unreachable.
-				// reset the button then:
-				solveGoal("Re-setting  " + button + " as it makes " + door + " unreachable", entityInteracted(button));
-			    continue ;	
-			}
-			*/
-			WorldEntity d_ = agent.getState().worldmodel.getElement(door);
-			if (G.getStatus().success() && d_ != null && agent.getState().isOpen(door)) {
-				log(">> " + door + " is open.");
+		List<String> candidates = getBelief().getConnectedButtons(door) ;
+		candidates.addAll(getBelief().getUnexploredButtons(door)) ;
+		
+		for (String button : candidates) {	
+			unlockWhenAgentBecomesTrapped()  ;
+			checkButtonDoorPair(button,door) ;
+			if(getBelief().isOpen(door)) {
+				DebugUtil.log(">>>> " + door + " is open.");
 				return;
-			}
-		}
-		// no connections known:
-		List<WorldEntity> candidates = agent.getState().knownButtons() ; 
-		for(WorldEntity button : candidates) {
-			if (! buttonIsReachable(button.id)) continue ;
-			GoalStructure G = SEQ(entityInteracted(button.id),
-					              FIRSTof(entityInCloseRange(door), entityStateRefreshed(door))
-					              )  ;
-			solveGoal("Toggling " + button.id + " to open " + door, G) ;
-			/*
-			if(! doorIsReachable(door)) {
-				// well ... the button also close another door that makes the target door unreachable.
-				// reset the button then:
-				solveGoal("Re-setting  " + button + " as it makes " + door + " unreachable", entityInteracted(button.id));
-			    continue ;	
-			}
-			*/
-			WorldEntity d_ = agent.getState().worldmodel.getElement(door) ;
-			if (G.getStatus().success() && d_ != null && agent.getState().isOpen(door)) {
-				log(">> " + door + " is open.") ;
-				return ;
 			}
 		}
 	}
 	
-	void explorationAlg() throws InterruptedException {
+	List<String> shuffle(List<String> z) {
+		List<String> S = new LinkedList<>() ;
+		List<String> R = new LinkedList<>() ;
+		S.addAll(z) ;
+		int N = S.size() ;
+		for (int k=0; k<N; k++) {
+			String chosen = S.remove(rnd.nextInt(S.size())) ;
+			R.add(chosen) ;
+		}
+		return R ;
+	}
+	
+	/**
+	 * When the agent is trapped in the current room, this will try to open a
+	 * randomly chosen door in the room.
+	 * @throws Exception 
+	 */	
+	void unlockWhenAgentBecomesTrapped() throws Exception {
+		if(getBelief().rooms.isLockedInCurrentRoopm()) {
+			DebugUtil.log(">>>> LOCKED!");
+			Rooms.Room R = getBelief().rooms.getCurrentRoom() ;
+			List<String> doors = getBelief().rooms.getDoorsOfCurrentRoom() ;
+			doors = shuffle(doors) ;
+			for(String d0 : doors) {
+				List<String> connectedButtons = getBelief()
+						.getConnectedButtons(d0)
+						.stream()
+						.filter(bt -> R.buttons.contains(bt))
+						.collect(Collectors.toList());
+				if(connectedButtons.size()>0) {
+					checkButtonDoorPair(connectedButtons.get(0),d0) ;
+					break ;
+				}
+			}
+		}
+	}
+	void explorationAlg() throws Exception {
 		Set<String> closedSet = new HashSet<>() ;
 		List<String> openSet = new LinkedList<>() ;
 		doExplore() ;
-		openSet.addAll(doors) ;
+		openSet.addAll(getBelief().knownDoors().stream().map(D -> D.id).collect(Collectors.toList())) ;
+		
 		while (! openSet.isEmpty()) {
+
 			String nextDoorToOpen = openSet.get(0) ;
-			if (! doorIsOpen(nextDoorToOpen)) {
+			if (! getBelief().isOpen(nextDoorToOpen)) {
 				// if the door is closed try to open it
 				
 				// But firstly, if this door is not even reachable, find first
 				// a closed door that would make the door reachable:
-				if (! doorIsReachable(nextDoorToOpen)) {
-					String enablingDoor = findAEnablingClosedDoor(nextDoorToOpen) ;
+				if (! getBelief().doorIsReachable(nextDoorToOpen)) {
+					
+					// if the agent is locked in the current room try to open a door first:
+					// unlockWhenAgentBecomesTrapped() 
+					
+					String enablingDoor = getBelief().findAEnablingClosedDoor(nextDoorToOpen) ;
 					if(enablingDoor != null) {
 						if(openSet.contains(enablingDoor)) {
-							openSet.remove(enablingDoor) ;
+						   openSet.remove(enablingDoor) ;
+						}
+						if(closedSet.contains(enablingDoor)) {
+							closedSet.remove(enablingDoor) ;
 						}
 						openSet.add(0,enablingDoor) ;
 						nextDoorToOpen = enablingDoor ;	
@@ -278,30 +256,23 @@ public class MyTestingAI {
 					*/
 				}
 				
-				int numberOfFoundButtons0 = buttons.size() ;
+				int numberOfFoundButtons0 = getBelief().knownButtons().size() ;
+
 				openDoor(nextDoorToOpen) ;
-				agent.getState().pathfinder.wipeOutMemory();
+				//agent.getState().pathfinder.wipeOutMemory();
+
 				doExplore() ;
-				for(String d : doors) {
-					if(!closedSet.contains(d) && ! openSet.contains(d)) {
-						openSet.add(d) ;
+
+				for(WorldEntity d : getBelief().knownDoors()) {
+					if(!closedSet.contains(d.id) && ! openSet.contains(d.id)) {
+						openSet.add(d.id) ;
 					}
 				}
-				if(numberOfFoundButtons0 < buttons.size()) {
-					// we found new buttons --> then put back closed doors that were already processed
+				if(numberOfFoundButtons0 < getBelief().knownButtons().size()) {
+					// we found new buttons --> then put back doors that were already processed
 					// back in the open-set:
-					List<String> toBePutBack = new LinkedList<>() ;
-					for(String d : closedSet) {
-						if(! agent.getState().isOpen(d)) {
-							// D is closed, and we found new buttons
-							toBePutBack.add(d) ;
-						}
-					}
-					for(String d : toBePutBack) {
-						openSet.add(d) ;
-						closedSet.remove(d) ;
-					}
-					
+					openSet.addAll(closedSet) ;
+					closedSet.clear();
 				}
 			}
 			openSet.remove(0) ;
@@ -364,23 +335,29 @@ public class MyTestingAI {
 	public Set<Pair<String, String>> exploreLRLogic(LabRecruitsEnvironment environment) throws Exception {
 
 		agent = new LabRecruitsTestAgent("agent0") // matches the ID in the CSV file
-				.attachState(new BeliefState())
+				.attachState(new XBelief())
 				.attachEnvironment(environment);
 
 		Thread.sleep(500) ;
 
 		try {
-			pressEnter();
+			DebugUtil.pressEnter();
 			
 			explorationAlg() ;
 
-			pressEnter();
+		}
+		catch(AgentDieException e) {
+		}
+		catch(InterruptedException e) {
+			DebugUtil.log(">>>> the execution thread was interrupted.") ;
 		}
 		catch(Exception e) {
 			// when the thread crashes of interrupted due to timeout:
+			e.printStackTrace() ;
 		}
 
-		return connections;
+		DebugUtil.pressEnter();
+		return ((XBelief) agent.getState()).getConnections();
 	}
 
 }
