@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import agents.LabRecruitsTestAgent;
 import agents.tactics.GoalLib;
+import alice.tuprolog.InvalidTheoryException;
 import environments.LabRecruitsEnvironment;
 import eu.iv4xr.framework.mainConcepts.TestDataCollector;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
@@ -19,6 +20,9 @@ import static agents.tactics.GoalLib.*;
 import static agents.tactics.TacticLib.*;
 import world.BeliefState;
 import world.LabEntity;
+
+import static gameTestingContest.XBelief.* ;
+import static nl.uu.cs.aplib.agents.PrologReasoner.* ;
 
 /**
  * This method provides a single method, checkLRLogic, that you have to
@@ -63,8 +67,9 @@ public class MyTestingAI {
 	/**
 	 * Register all buttons and doors currently in the agent's belief to the models
 	 * of rooms and connections that it keeps track.
+	 * @throws InvalidTheoryException 
 	 */
-	private void registerFoundGameObjects() {
+	private void registerFoundGameObjects() throws InvalidTheoryException {
 		for(WorldEntity e : getBelief().knownButtons()) {
 			getBelief().registerButton(e.id);
 		}
@@ -136,34 +141,50 @@ public class MyTestingAI {
 	
 	/**
 	 * Move the agent towards a door to get its actual current state. This assumes the door
-	 * is reachable.
-	 * @throws InterruptedException 
+	 * is reachable. It returns the state of the door, if the agent manages to observe it.
+	 * Else null (e.g. if the path to the door is blocked, so the agent cannot observe it).
 	 */
-	boolean getActualDoorState(String door) throws Exception {
+	Boolean getActualDoorState(String door) throws Exception {
 		GoalStructure G = FIRSTof(entityInCloseRange(door), entityStateRefreshed(door)) ;
 		solveGoal("Sampling the state of " + door, G);
+		if(! isCurrentlyObserved(door)) {
+			return null ;
+		}
 		return getBelief().isOpen(door) ;	      
+	}
+	
+	boolean isCurrentlyObserved(String door) {
+		WorldEntity d_ = getBelief().worldmodel.getElement(door) ;
+		return (d_ != null && d_.timestamp >= getBelief().worldmodel.timestamp) ;
 	}
 	
 	
 	/**
 	 * Toggle the button, then check the door state. 
-	 * Pre-condition: the door should be reachable from the current agent location, and the door
+	 * Pre-condition: the button and the door should be reachable from the current agent location, and the door
 	 * is closed.
-	 * @throws InterruptedException 
+	 * 
+	 * Returns true if the method manages to complete the task (regardless if the door is in the
+	 * end open or not). Else it returns false (e.g. it it times out).
 	 */
-	void checkButtonDoorPair(String button, String door) throws Exception {
+	boolean checkButtonDoorPair(String button, String door) throws Exception {
 		// Don't use entityStateRefreshed() here as it logic assumes there is a nav-node
 		// from where the door can be seen by the agent, which won't be the case if
 		// a door becomes closed and completely cut-off the door.
 		// Below we will use entityInCloseRange() as first option instead.
-		GoalStructure G = SEQ(entityInteracted(button), 
-	              FIRSTof(entityInCloseRange(door), entityStateRefreshed(door)));
+		
 		boolean buttonOldState = getBelief().isOn(button) ;
-        solveGoal("Toggling " + button + " to open " + door, G);
-        boolean buttonNewState = getBelief().isOn(button) ;
+		GoalStructure G = SEQ(
+				entityInteracted(button), 
+				IFELSE((XBelief S) -> S.isOn(button) != buttonOldState,
+	              FIRSTof(entityInCloseRange(door), entityStateRefreshed(door)),
+	              FAIL()));
+		solveGoal("Toggling " + button + " to open " + door, G);
+                
         boolean isOpen = getBelief().isOpen(door) ;
-        if(buttonOldState == buttonNewState) return ;
+        
+        if(!G.getStatus().success()) return false ;
+        
         if(isOpen) {
         	// no need to register the connection. This is registred automatically by solveGoal().
         }
@@ -171,25 +192,41 @@ public class MyTestingAI {
         	// register the non-connection:
         	getBelief().registerNONConnection(button, door);
         }
+        return true ;
 	}
 	
 	/**
 	 * Try to open the given door. This assumes that the door is reachable from the agent current
 	 * position, and is currently closed.
+	 * Return true if it manages to open the door, else false.
 	 */
-	void openDoor(String door) throws Exception {
+	boolean openDoor(String door) throws Exception {
 		
-		List<String> candidates = getBelief().getConnectedButtons(door) ;
-		candidates.addAll(getBelief().getUnexploredButtons(door)) ;
+		unlockWhenAgentBecomesTrapped()  ;
+		
+		List<String> candidates = getBelief().pQueryAll("B",wiredTo.on("B",door)) ;
+		candidates.addAll(getBelief().pQueryAll("B",and(isButton.on("B"),not(notWiredTo.on("B",door))))) ;
+		
+		// DebugUtil.log(">>>> candidates: " + candidates);
+		
+		if(candidates.isEmpty()) return false ;
+		
+		if(candidates.size()>1) {
+			candidates = candidates.stream()
+					. filter(B -> getBelief().buttonIsReachable(B))
+					. collect(Collectors.toList())  ;
+		}
+		
+		if(candidates.isEmpty()) return false ;
 		
 		for (String button : candidates) {	
-			unlockWhenAgentBecomesTrapped()  ;
-			checkButtonDoorPair(button,door) ;
-			if(getBelief().isOpen(door)) {
+			var completed = checkButtonDoorPair(button,door) ;
+			if(completed && getBelief().isOpen(door)) {
 				DebugUtil.log(">>>> " + door + " is open.");
-				return;
+				return true ;
 			}
 		}
+		return false ;
 	}
 	
 	/**
@@ -208,28 +245,71 @@ public class MyTestingAI {
 	}
 	
 	/**
-	 * When the agent is trapped in the current room, this will try to open a
-	 * randomly chosen door in the room.
-	 * @throws Exception 
+	 * When the agent is trapped in the current room, this will try to open a randomly chosen door in the room.
+	 * It returns true if it manages to open a door in that room. Else false is returned.
+	 * 
+	 * Note that this cannot detect if an agent is trapped within multiple neighboring rooms.
 	 */	
-	void unlockWhenAgentBecomesTrapped() throws Exception {
-		if(getBelief().rooms.isLockedInCurrentRoopm()) {
-			DebugUtil.log(">>>> LOCKED!");
-			Rooms.Room R = getBelief().rooms.getCurrentRoom() ;
-			List<String> doors = getBelief().rooms.getDoorsOfCurrentRoom() ;
-			doors = shuffle(doors) ;
-			for(String d0 : doors) {
-				List<String> connectedButtons = getBelief()
-						.getConnectedButtons(d0)
-						.stream()
-						.filter(bt -> R.buttons.contains(bt))
-						.collect(Collectors.toList());
-				if(connectedButtons.size()>0) {
-					checkButtonDoorPair(connectedButtons.get(0),d0) ;
-					break ;
+	boolean unlockWhenAgentBecomesTrapped() throws Exception {
+		if(getBelief().isLockedInCurrentRoom()) {
+			DebugUtil.log(">>>> The agent is LOCKED in its room! Trying to unlock.");
+			
+			String currentRoom = getBelief().getCurrentRoom() ;
+			
+			var candidates = getBelief().pQueryAll(
+					"B", 
+					and(isButton.on("B"),
+						inRoom.on(currentRoom,"B"),
+						isDoor.on("D"),
+						inRoom.on(currentRoom,"D"),
+						wiredTo.on("B","D")
+							)) ;
+			
+			if (candidates.isEmpty()) {
+				DebugUtil.log(">>>> does not know how to unlock...") ;
+				return false ;
+			}
+			
+			String chosen = candidates.get(rnd.nextInt(candidates.size())) ;
+			
+			var doors =  getBelief().pQueryAll(
+					"D", 
+					and(isDoor.on("D"),
+						inRoom.on(currentRoom,"D"),
+						wiredTo.on(chosen,"D")
+							)) ;
+			
+			solveGoal("Toggling " + chosen + " unlock the agent.", entityInteracted(chosen));
+			
+			for(var D : doors) {
+				if(isCurrentlyObserved(D)) {
+					if(getBelief().isOpen(D)) {
+						DebugUtil.log(">>>> unlocked.") ;
+						return true ;
+					}
+				}
+				else {
+					Boolean open = getActualDoorState(D) ;
+					if(open == true) {
+						DebugUtil.log(">>>> unlocked.") ;
+						return true ;
+					}
 				}
 			}
+			// fail to unlock the agent :(
+			DebugUtil.log(">>>> cannot unlock...") ;
+
+			return false ;
 		}
+		return true ;
+	}
+	
+	private void printAlgStatus(Set<String> closedSet, List<String> openSet, int round) {
+		if(! MyConfig.DEBUG_MODE) return ;
+		DebugUtil.log(">>>> round:" + round) ;
+		DebugUtil.log("     open-set  : " + openSet) ;
+		DebugUtil.log("     closed-set: " + closedSet) ;
+		
 	}
 	
 	/**
@@ -264,7 +344,11 @@ public class MyTestingAI {
 		doExplore() ;
 		openSet.addAll(getBelief().knownDoors().stream().map(D -> D.id).collect(Collectors.toList())) ;
 		
+		int round = 0 ;
+		
 		while (! openSet.isEmpty()) {
+			
+			printAlgStatus(closedSet,openSet,round) ;
 
 			String nextDoorToOpen = openSet.get(0) ;
 			if (! getBelief().isOpen(nextDoorToOpen)) {
@@ -277,22 +361,24 @@ public class MyTestingAI {
 					// if the agent is locked in the current room try to open a door first:
 					// unlockWhenAgentBecomesTrapped() 
 					
-					String enablingDoor = getBelief().findAEnablingClosedDoor(nextDoorToOpen) ;
-					if(enablingDoor != null) {
-						if(openSet.contains(enablingDoor)) {
-						   openSet.remove(enablingDoor) ;
+					var enablingDoors = getBelief().getEnablingDoors(nextDoorToOpen) ;
+					if(!enablingDoors .isEmpty()) {
+						// choose one:
+						var chosen = enablingDoors.get(rnd.nextInt(enablingDoors.size())) ;
+						if(openSet.contains(chosen)) {
+						   openSet.remove(chosen) ;
 						}
-						if(closedSet.contains(enablingDoor)) {
-							closedSet.remove(enablingDoor) ;
+						if(closedSet.contains(chosen)) {
+							closedSet.remove(chosen) ;
 						}
-						openSet.add(0,enablingDoor) ;
-						nextDoorToOpen = enablingDoor ;	
+						openSet.add(0,chosen) ;
+						nextDoorToOpen = chosen ;	
 					}
 					else { 
 						// if we can't find an enabling door, then put nextDoorToOpen to the back
 						// of the openSet, if it has more than one element:
 						if (openSet.size()>0) {
-							openSet.remove(0) ;
+							openSet.remove(nextDoorToOpen) ;
 							openSet.add(nextDoorToOpen) ;
 							nextDoorToOpen = openSet.get(0) ;
  						}
@@ -314,8 +400,6 @@ public class MyTestingAI {
 				int numberOfFoundButtons0 = getBelief().knownButtons().size() ;
 
 				openDoor(nextDoorToOpen) ;
-				//agent.getState().pathfinder.wipeOutMemory();  --> let's not do this as it makes things more complicated
-
 				doExplore() ;
 
 				for(WorldEntity d : getBelief().knownDoors()) {
@@ -332,6 +416,8 @@ public class MyTestingAI {
 			}
 			openSet.remove(0) ;
 			closedSet.add(nextDoorToOpen) ;
+			
+			round++ ;
 		}	
 	}
 	

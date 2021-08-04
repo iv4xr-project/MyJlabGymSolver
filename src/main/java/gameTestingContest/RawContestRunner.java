@@ -47,6 +47,7 @@ public class RawContestRunner {
     static LabRecruitsTestServer labRecruitsBinding;
 
     // a convenience method to launch Lab Recruits:
+    
     static void launchLabRcruits() {
         var useGraphics = true; // set this to false if you want to run the game without graphics
         SocketReaderWriter.debug = false;
