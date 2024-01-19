@@ -1,4 +1,4 @@
-package gameTestingContest;
+package algorithms;
 
 import java.util.*;
 import java.util.stream.Collectors;

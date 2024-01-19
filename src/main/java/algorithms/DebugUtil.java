@@ -1,6 +1,8 @@
-package gameTestingContest;
+package algorithms;
 
 import java.util.Scanner;
+
+import gameTestingContest.MyConfig;
 
 public class DebugUtil {
 

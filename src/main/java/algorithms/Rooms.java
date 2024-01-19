@@ -1,4 +1,4 @@
-package gameTestingContest;
+package algorithms;
 
 import java.util.*;
 
@@ -168,7 +168,7 @@ public class Rooms {
 	}
 	
 	/**
-	 * Return true is all doors of the room the agent is currently in is closed.
+	 * Return true if all doors of the room the agent is currently in is closed.
 	 */
 	boolean isLockedInCurrentRoopm() {
 		Room R = getCurrentRoom() ;

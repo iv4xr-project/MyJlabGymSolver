@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 
 import agents.LabRecruitsTestAgent;
 import agents.tactics.GoalLib;
+import algorithms.AgentDieException;
+import algorithms.DebugUtil;
+import algorithms.Rooms;
+import algorithms.XBelief;
 import environments.LabRecruitsEnvironment;
 import eu.iv4xr.framework.mainConcepts.TestDataCollector;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
@@ -21,7 +25,7 @@ import world.BeliefState;
 import world.LabEntity;
 
 /**
- * This method provides a single method, checkLRLogic, that you have to
+ * This method provides a single method, exploreLRLogic, that you have to
  * implement for the Game Testing Contest. See the documentation of the method
  * below.
  */
