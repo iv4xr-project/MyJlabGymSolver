@@ -211,7 +211,7 @@ public class XBelief extends BeliefState {
 	/**
 	 * Return the set of known connections between buttons and doors.
 	 */
-	Set<Pair<String,String>> getConnections() {
+	public Set<Pair<String,String>> getConnections() {
 		return connectionsModel.entrySet().stream()
 		   .filter(E -> E.getValue() == LinkStatus.LINKED)
 		   .map(E -> E.getKey())

@@ -10,7 +10,7 @@ public class DebugUtil {
 		System.out.println(s); 
 	}
 	
-	static void pressEnter() {
+	public static void pressEnter() {
 		if(! MyConfig.DEBUG_MODE) return ;
 		System.out.println("Hit RETURN to continue.");
 		new Scanner(System.in).nextLine();

@@ -99,6 +99,8 @@ public class BaseSearchAlgorithm {
     }
     
     public BaseSearchAlgorithm(LabRecruitsTestAgent agent) { 
+    	this.agent = agent ;
+    	this.setTotalSearchBudget(180000);
     	var state = agent.getState() ;
     	if (state == null) 
     		throw new IllegalArgumentException("Expecting an agent that already has a state.") ;
@@ -143,7 +145,7 @@ public class BaseSearchAlgorithm {
 			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
 			return true ;
 		}
-		if(getBelief().worldmodel.health <= 0) {
+		if(turn > 0 && getBelief().worldmodel.health <= 0) {
 			DebugUtil.log(">>> THE AGENT DIED. Aaaaaw.");
 			return true ;
 		}
@@ -162,6 +164,9 @@ public class BaseSearchAlgorithm {
 	 * will stop as well. If the goal-level budget is 0 or negative, then it is ignored. Only
 	 * the total budget matters then.
 	 * 
+	 * <p>The method returns the status of the given goal at the end of the methid (success/fail
+	 * or in-progress).
+	 * 
 	 * <p>As the agent executes, it will also update the rooms and connections models on the fly based
 	 * on what it observes (e.g. when it sees a button, or when it interacts on a button, or when it
 	 * notices that a door changes state).
@@ -174,7 +179,7 @@ public class BaseSearchAlgorithm {
 	 *     the interaction on B. So it adds the connection B->D to its memory.
 	 * </ol>
 	 */
-	void solveGoal(String goalDesc, GoalStructure G, int budget) throws Exception {
+	ProgressStatus solveGoal(String goalDesc, GoalStructure G, int budget) throws Exception {
 		DebugUtil.log("*** Deploying a goal: " + goalDesc) ;
 		getBelief().clearGoalLocation();
 		getBelief().clearStuckTrackingInfo();
@@ -215,6 +220,8 @@ public class BaseSearchAlgorithm {
 		
 		// agent.printStatus();	
 		DebugUtil.log("*** Goal " + goalDesc + " terminated. Consumed turns: " + i + ". Status: " + G.getStatus()) ;
+		
+		return G.getStatus() ;
 	}
 	
 	/**
@@ -269,6 +276,7 @@ public class BaseSearchAlgorithm {
         	// register the non-connection:
         	getBelief().registerNONConnection(button, door);
         }
+        return ;
 	}
 	
 	/**
@@ -278,8 +286,11 @@ public class BaseSearchAlgorithm {
 	 * to be connected with the door are tried first. If none opens the door, other buttons,
 	 * whose connectivity to the door is still unknown are tried
 	 * <p> The agent stops when the door becomes open.
+	 * 
+	 * <p>The method returns true if the door is open, and else false.
+	 * It also returns false if it has no candidate button to try.
 	 */
-	void openDoor(String door, int budget) throws Exception {
+	boolean openDoor(String door, int budget) throws Exception {
 		
 		// we will first try doors that are known to be connected to the door, then we add the buttons
 		// that the agents don't know if they are connected to the door.
@@ -288,16 +299,19 @@ public class BaseSearchAlgorithm {
 		
 		if (candidates.isEmpty()) {
 			DebugUtil.log(">>>> the agent tries to open " + door + ", but it does know any button that can be a candidate to do that.");
+			return false ;
 		}
 		
+		ProgressStatus status = null ;
 		for (String button : candidates) {	
 			unlockWhenAgentBecomesTrapped(budget)  ;
 			checkButtonDoorPair(button,door, budget) ;
 			if(getBelief().isOpen(door)) {
 				DebugUtil.log(">>>> " + door + " is open.");
-				return;
+				return true ;
 			}
 		}
+		return false ;
 	}
 	
 	/**
@@ -347,6 +361,8 @@ public class BaseSearchAlgorithm {
      * (if it changes).
 	 */
 	public void runAlgorithm() throws Exception {
+		long t0 = System.currentTimeMillis() ;
+		int p = 0 ;
 		while (! terminationConditionIsReached()) {
 			doExplore(budget_per_task) ;
 			var buttons = getBelief().knownButtons() ;
@@ -357,7 +373,23 @@ public class BaseSearchAlgorithm {
 			WorldEntity B0 = buttons.get(rnd.nextInt(buttons.size())) ;
 			WorldEntity D0 = doors.get(rnd.nextInt(doors.size())) ;
 			checkButtonDoorPair(B0.id,D0.id,budget_per_task) ;
-		}		
+			p++ ;
+		}	
+		var time = System.currentTimeMillis() - t0 ;
+		System.out.println("** RANDOM") ;
+		System.out.println("** total-runtime=" + time + ", #turns=" + this.turn) ;
+		System.out.println("** Total budget=" + this.totalSearchBudget
+				+ ", unused=" + Math.max(0,this.remainingSearchBudget)) ;
+		System.out.println("** #pairs tried=" + p) ;
+		System.out.print("** The agent is ") ;
+		System.out.println(getBelief().worldmodel.health > 0 ? "ALIVE" : "DEAD") ;
+		System.out.print("** Search-goal: ") ;
+		if (goalPredicate == null) {
+			System.out.println(" none specified") ;
+		}
+		else {
+			System.out.println(goalPredicate.test(getBelief()) ? "ACHIEVED" : "NOT-achieved") ;
+		}
 	}
 
 }

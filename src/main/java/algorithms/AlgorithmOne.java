@@ -49,13 +49,17 @@ public class AlgorithmOne extends BaseSearchAlgorithm {
 	 *             
 	 * In step 2b, to open D we will have to try out various buttons.
 	 */
-	void searchAlgorithm(int taskBudget, int exploreBudget) throws Exception {
+	void search() throws Exception {
+		
+		long t0 = System.currentTimeMillis() ;
 		
 		Set<String> doneSet = new HashSet<>() ;
 		
 		List<String> todoSet = new LinkedList<>() ;
 		
-		doExplore(exploreBudget) ;
+		doExplore(explorationBudget) ;
+		
+		int numOfDoorsTargetted = 0 ;
 		
 		todoSet.addAll(getBelief().knownDoors().stream().map(D -> D.id).collect(Collectors.toList())) ;
 		
@@ -108,10 +112,11 @@ public class AlgorithmOne extends BaseSearchAlgorithm {
 				
 				int numberOfFoundButtons0 = getBelief().knownButtons().size() ;
 
-				openDoor(nextDoorToOpen,taskBudget) ;
+				openDoor(nextDoorToOpen,budget_per_task) ;
 				//agent.getState().pathfinder.wipeOutMemory();  --> let's not do this as it makes things more complicated
+				numOfDoorsTargetted++ ;
 
-				doExplore(exploreBudget) ;
+				doExplore(explorationBudget) ;
 
 				for(WorldEntity d : getBelief().knownDoors()) {
 					if(!doneSet.contains(d.id) && ! todoSet.contains(d.id)) {
@@ -127,12 +132,28 @@ public class AlgorithmOne extends BaseSearchAlgorithm {
 			}
 			todoSet.remove(0) ;
 			doneSet.add(nextDoorToOpen) ;
-		}	
+		}
+		
+		var time = System.currentTimeMillis() - t0 ;
+		System.out.println("** Alg-ONE") ;
+		System.out.println("** total-runtime=" + time + ", #turns=" + this.turn) ;
+		System.out.println("** Total budget=" + this.totalSearchBudget
+				+ ", unused=" + Math.max(0,this.remainingSearchBudget)) ;
+		System.out.println("** #doors targetted=" + numOfDoorsTargetted) ;
+		System.out.print("** The agent is ") ;
+		System.out.println(getBelief().worldmodel.health > 0 ? "ALIVE" : "DEAD") ;
+		System.out.print("** Search-goal: ") ;
+		if (goalPredicate == null) {
+			System.out.println(" none specified") ;
+		}
+		else {
+			System.out.println(goalPredicate.test(getBelief()) ? "ACHIEVED" : "NOT-achieved") ;
+		}
 	}
 	
 	@Override
 	public void runAlgorithm() throws Exception {
-		searchAlgorithm(this.budget_per_task, this.explorationBudget) ;
+		search() ;
 	}
 	
 
