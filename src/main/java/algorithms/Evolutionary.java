@@ -29,7 +29,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	public int maxChromosomeLength = 8 ;
 	
-	public int generationIndex ;
+	public int generationNr = 0 ;
 	
 	public int maxFitness = 10000 ;
 	
@@ -75,13 +75,13 @@ public class Evolutionary extends BaseSearchAlgorithm {
  				population.add(CI) ;
  				return ;
  			}
- 			if (population.get(population.size() - 1).value <= CI.value) {
+ 			if (population.get(population.size() - 1).value >= CI.value) {
  				population.add(CI) ;
  				return ;
  			}
 			int k = 0 ;
 			for (var M : population) {
-				if (M.value > CI.value) {
+				if (M.value < CI.value) {
 					break ;
 				}
 				k++ ;
@@ -123,7 +123,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	
 	void printStatus() {
-		System.out.println("** Generation = " + generationIndex) ;
+		System.out.println("** Generation = " + generationNr) ;
 		System.out.println("** #population= " + myPopulation.population.size()) ;
 		if ( myPopulation.population.isEmpty()) return ;
 		System.out.println("** best-value = " + myPopulation.population.get(0).value) ;
@@ -194,7 +194,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		   myPopulation.add(value(tau)); 
 		   }
 		}
-		generationIndex++ ;
+		generationNr++ ;
 		printStatus() ;
 		// override the calculation of remaining budget:
 		long time = System.currentTimeMillis() - t0 ;
@@ -240,7 +240,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		}
 		
 		myPopulation.applySelection(maxPopulationSize, numberOfElitesToKeepDuringSelection);
-		generationIndex++ ;
+		generationNr++ ;
 		printStatus() ;
 		// override the calculation of remaining budget:
 		long time = System.currentTimeMillis() - t0 ;

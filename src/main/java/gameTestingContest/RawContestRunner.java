@@ -81,13 +81,6 @@ public class RawContestRunner {
         	LabRecruitsTestAgent agent = new LabRecruitsTestAgent("agent0") // matches the ID in the CSV file
     				.attachState(new XBelief())
     				.attachEnvironment(env2);
-
-    		try {
-    			Thread.sleep(500) ;
-    		}
-    		catch(Exception e) {
-    			// swallow
-    		}
     		return agent ;
         } ;
         
