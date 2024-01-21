@@ -3,6 +3,7 @@ package gameTestingContest;
 import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import agents.LabRecruitsTestAgent;
@@ -10,6 +11,7 @@ import agents.tactics.GoalLib;
 import algorithms.AlgorithmOne;
 import algorithms.BaseSearchAlgorithm;
 import algorithms.DebugUtil;
+import algorithms.Evolutionary;
 import algorithms.Rooms;
 import algorithms.XBelief;
 import environments.LabRecruitsEnvironment;
@@ -32,6 +34,11 @@ import world.LabEntity;
  */
 public class MyTestingAI {
 
+	/**
+	 * Agent-constructor. Used for Evo-algorithm.
+	 */
+	public Function<Void,LabRecruitsTestAgent> agentConstructor = null ;
+		    
 
 	/**
 	 * IMPLEMENT THIS METHOD.
@@ -86,6 +93,15 @@ public class MyTestingAI {
 	 */
 	public Set<Pair<String, String>> exploreLRLogic(LabRecruitsEnvironment environment) throws Exception {
 
+		if (MyConfig.ALG.equals("Evo")) {
+			var evo = new Evolutionary(150,150,agentConstructor) ;
+			DebugUtil.log("** Using Evolutionary-algorithm") ;
+			evo.runAlgorithm() ;
+			var B = evo.myPopulation.getBest().belief ;
+			DebugUtil.pressEnter() ;
+			return B.getConnections();
+		}
+		
 		LabRecruitsTestAgent agent = new LabRecruitsTestAgent("agent0") // matches the ID in the CSV file
 				.attachState(new XBelief())
 				.attachEnvironment(environment);
@@ -93,24 +109,25 @@ public class MyTestingAI {
 		Thread.sleep(500) ;
 
 		try {
-			DebugUtil.pressEnter();
 			
 			// Run the exploration algorithm:
 			switch(MyConfig.ALG) {
+			
+			   case "AOne" : 
+				   // using the alg's default budget, which is 180-sec,
+				   // and leaving the goal empty.
+				   DebugUtil.log("** Using Algorithm-One") ;
+				   BaseSearchAlgorithm aOne = new AlgorithmOne(agent) ; 
+				   aOne.runAlgorithm() ;
+				   break ;
+				   
 			   case "Random" : 
 				   // using the alg's default budget, which is 180-sec,
 				   // and leaving the goal empty.
 				   DebugUtil.log("** Using the Random-algorithm") ;
 				   BaseSearchAlgorithm random = new BaseSearchAlgorithm(agent) ;
 				   random.runAlgorithm() ;
-				   break ;
-			   
-			   default : 
-				   // using the alg's default budget, which is 180-sec,
-				   // and leaving the goal empty.
-				   DebugUtil.log("** Using Algorithm-One") ;
-				   BaseSearchAlgorithm aOne = new AlgorithmOne(agent) ; 
-				   aOne.runAlgorithm() ;
+				   break ; 
 			}
 			
 		}

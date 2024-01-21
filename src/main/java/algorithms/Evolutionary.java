@@ -21,7 +21,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 */
 	public boolean onlyExtendWithNewGene = true ;
 	
-	public int explorationBudget ;
+	public int explorationBudget = 150 ;
 	
 	public int maxPopulationSize = 30 ;
 	
@@ -35,14 +35,24 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	List<String> knownButtons = new LinkedList<>() ;
 	
-	Population myPopulation = new Population() ;
+	public Population myPopulation = new Population() ;
 	
 	Function <Void,LabRecruitsTestAgent> agentConstructor ;
 	
-	static class ChromosomeInfo {
-		List<String> chromosome ;
-		float value ;
-		XBelief belief ;
+	Evolutionary() { }
+	
+	public Evolutionary(int budget_per_task,
+			int explorationBudget,
+			Function <Void,LabRecruitsTestAgent> agentConstructor) {
+		this.budget_per_task = budget_per_task ;
+		this.explorationBudget = explorationBudget ;
+		this.agentConstructor = agentConstructor ;
+	}
+	
+	public static class ChromosomeInfo {
+		public List<String> chromosome ;
+		public float value ;
+		public XBelief belief ;
 		
 		ChromosomeInfo(List<String> chromosome, float value, XBelief belief) {
 			this.chromosome = chromosome ;
@@ -51,7 +61,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		}
 	}
 	
-	static class Population {
+	public static class Population {
 		
 		Random rnd  ;
 				
@@ -80,7 +90,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		}
 		
 		
-		ChromosomeInfo getBest() {
+		public ChromosomeInfo getBest() {
 			if (population.isEmpty()) return null ;
 			return population.get(0) ;
 		}
@@ -202,9 +212,12 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			float r = rnd.nextFloat() ;
 			if (r <= mutationProbability) {
 				var tau = mutate(sigma) ;
-				newBatch.add(tau) ;
+				if (! myPopulation.memberOf(tau))
+					newBatch.add(tau) ;
 			}
-			else if (sigma.size() < maxChromosomeLength && r <= mutationProbability + insertionProbability) {
+			else if (sigma.size() < maxChromosomeLength 
+					&& mutationProbability < r
+					&& r <= mutationProbability + insertionProbability) {
 				var tau = extend(sigma) ;
 				newBatch.add(tau) ;
 			}

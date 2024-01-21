@@ -3,6 +3,8 @@ package gameTestingContest;
 import java.util.*;
 import java.util.function.Supplier;
 
+import agents.LabRecruitsTestAgent;
+import algorithms.XBelief;
 import environments.LabRecruitsConfig;
 import environments.LabRecruitsEnvironment;
 import environments.SocketReaderWriter;
@@ -73,6 +75,22 @@ public class RawContestRunner {
 
         // let's now instantiate your test-algorithm/AI, and run it:
         MyTestingAI myTestingAI = mkAnInstanceOfMyTestingAI.get();
+        
+        myTestingAI.agentConstructor = dummy -> {
+        	LabRecruitsEnvironment env2 = new LabRecruitsEnvironment(config);
+        	LabRecruitsTestAgent agent = new LabRecruitsTestAgent("agent0") // matches the ID in the CSV file
+    				.attachState(new XBelief())
+    				.attachEnvironment(env2);
+
+    		try {
+    			Thread.sleep(500) ;
+    		}
+    		catch(Exception e) {
+    			// swallow
+    		}
+    		return agent ;
+        } ;
+        
         Set<Pair<String, String>> report = myTestingAI.exploreLRLogic(env);
         // printing the findings:
         System.out.println("** The level has the following logic:");
