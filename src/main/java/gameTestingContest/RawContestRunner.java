@@ -38,7 +38,8 @@ public class RawContestRunner {
      * definition of this level. This csv file will be loaded to Lab Recruits, which
      * in turn will generate the corresponding game content.
      */
-    static String levelName = "BM2021_diff3_R4_2_2" ;
+    //static String levelName = "BM2021_diff3_R4_2_2" ;
+    static String levelName = "BM2021_diff2_R7_2_2" ;    
 
     /**
      * Specify hefre the path to the directory where the level-file referred to by

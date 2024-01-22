@@ -125,7 +125,9 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			int k=0 ;
 			System.out.println("** #chromosomes=" + population.size()) ;
 			for (var CI : population) {
-				System.out.println("** [" + k + "] val=" + CI.value + ", " + CI.chromosome) ;
+				System.out.println("** [" + k + "] val=" + CI.value + ", " + CI.chromosome
+						+ ", #connections:" + CI.belief.getConnections().size() 
+						) ;
 				k++ ;
 			}
 		}
@@ -144,6 +146,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		System.out.println("** best-value = " + myPopulation.population.get(0).value) ;
 		var avrg = myPopulation.population.stream().collect(Collectors.averagingDouble(CI -> (double) CI.value)) ;
 		System.out.println("** avrg-value = " + avrg) ;
+		myPopulation.print(); 
 	}
 	
 	void createInitialPopulation() throws Exception {
@@ -376,7 +379,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				 break ;
 		}
 				
-		var S = agent.getState() ;
+		var S = getBelief() ;
 		int value = 0 ;
 		
 		if (goalPredicate != null && goalPredicate.test(S)) {
@@ -385,9 +388,10 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		}
 		else {
 			//System.out.println(">>> #DOORS=" + S.knownDoors().size()) ;
-			for (var D : S.knownDoors()) {
-				if (S.isOpen(D.id)) value++ ;
-			}
+			//for (var D : S.knownDoors()) {
+			//	if (S.isOpen(D.id)) value++ ;
+			//}
+			value = S.getConnections().size() ;
 		}
 		System.out.println(">>> chromosome: " 
 		   + chromosome
@@ -398,12 +402,11 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				knownButtons.add(B.id) ;
 			}
 		}
-		var S_ = this.getBelief() ;
 		closeEnv() ;
 		// override the calculation of remaining budget:
 		long time = System.currentTimeMillis() - t0 ;
 		this.remainingSearchBudget = remainingBudget - (int) time ;
-		return new ChromosomeInfo(chromosome,value,S_) ;
+		return new ChromosomeInfo(chromosome,value,S) ;
 	}
 	
 	
