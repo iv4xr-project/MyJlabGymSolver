@@ -141,7 +141,7 @@ public class AlgorithmOne extends BaseSearchAlgorithm {
 				+ ", unused=" + Math.max(0,this.remainingSearchBudget)) ;
 		System.out.println("** #doors targetted=" + numOfDoorsTargetted) ;
 		System.out.print("** The agent is ") ;
-		System.out.println(getBelief().worldmodel.health > 0 ? "ALIVE" : "DEAD") ;
+		System.out.println(getBelief().worldmodel().health > 0 ? "ALIVE" : "DEAD") ;
 		System.out.print("** Search-goal: ") ;
 		if (goalPredicate == null) {
 			System.out.println(" none specified") ;

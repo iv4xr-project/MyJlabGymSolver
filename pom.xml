@@ -82,17 +82,17 @@
             <version>v1.0</version>
         </dependency>
         -->
+        <!--  
         <dependency>
-            <!-- <groupId>nl.uu.cs.aplib</groupId> -->
             <groupId>com.github.iv4xr-project</groupId>
             <artifactId>aplib</artifactId>
             <version>1.3.0</version> 
         </dependency>
         <dependency>
-            <!-- <groupId>nl.uu.cs.aplib</groupId> -->
             <groupId>com.github.iv4xr-project</groupId>
             <artifactId>iv4xrDemo</artifactId>
-            <version>3768fdf</version> <!--  2.2.6  -->
+            <version>3768fdf</version> 
         </dependency>
+        -->
     </dependencies>
 </project>

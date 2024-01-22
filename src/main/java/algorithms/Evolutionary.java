@@ -39,14 +39,16 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	Function <Void,LabRecruitsTestAgent> agentConstructor ;
 	
-	Evolutionary() { }
+	Evolutionary() { super() ; }
 	
 	public Evolutionary(int budget_per_task,
 			int explorationBudget,
 			Function <Void,LabRecruitsTestAgent> agentConstructor) {
+		this() ;
 		this.budget_per_task = budget_per_task ;
 		this.explorationBudget = explorationBudget ;
 		this.agentConstructor = agentConstructor ;
+		myPopulation.rnd = this.rnd ;
 	}
 	
 	public static class ChromosomeInfo {
@@ -112,15 +114,28 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			int numberToDrop = population.size() - targetSize ;
 			
 			while (numberToDrop > 0) {
-				int k = rnd.nextInt(numberToDrop) ;
+				int k = rnd.nextInt(population.size() - numberOfElitesToKeep) ;
 				k += numberOfElitesToKeep ;
 				population.remove(k) ;
-				numberOfElitesToKeep -- ;
+				numberToDrop -- ;
+			}
+		}
+		
+		void print() {
+			int k=0 ;
+			System.out.println("** #chromosomes=" + population.size()) ;
+			for (var CI : population) {
+				System.out.println("** [" + k + "] val=" + CI.value + ", " + CI.chromosome) ;
+				k++ ;
 			}
 		}
 				
 	}
 	
+	public void setRndSeed(int seed) {
+		rnd = new Random(seed) ;
+		myPopulation.rnd = rnd ;
+	}
 	
 	void printStatus() {
 		System.out.println("** Generation = " + generationNr) ;
@@ -158,7 +173,6 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			throw new Exception("Cannot create a starting population because the agent cannot find any button.") ;
 		}
 		
-		myPopulation = new Population() ;
 		
 		if (knownButtons.size() == 1)  {
 			List<String> tau = new LinkedList<>() ;
@@ -315,9 +329,11 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		int k = 0 ;
 		while (k<crossPoint) {
 			S.add(shorter.get(k)) ;
+			k++ ;
 		}
 		while (k < longer.size()) {
 			S.add(longer.get(k)) ;
+			k++ ;
 		}
 		return S ;
 	}
@@ -349,19 +365,17 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		for (var button : chromosome) {
 			 var status = solveGoal("Toggling button " + button, entityInteracted(button), budget_per_task) ;
 			 // if the agent is dead, break:
-			 if (agent.getState().worldmodel.health <= 0)
+			 if (agent.getState().worldmodel().health <= 0)
 				 break ;
 			 
 			 // reset exploration, then do full explore:
-			 agent.getState().pathfinder.wipeOutMemory();
+			 agent.getState().pathfinder().wipeOutMemory();
 			 doExplore(explorationBudget) ;
 			 // also break the execution if a button fails:
 			 if (!status.success()) 
 				 break ;
 		}
-		
-		var agent = agentConstructor.apply(null) ;
-		
+				
 		var S = agent.getState() ;
 		int value = 0 ;
 		
@@ -370,8 +384,8 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			value = maxFitness ;
 		}
 		else {
+			//System.out.println(">>> #DOORS=" + S.knownDoors().size()) ;
 			for (var D : S.knownDoors()) {
-				var D_ = (LabEntity) D ;
 				if (S.isOpen(D.id)) value++ ;
 			}
 		}
@@ -415,8 +429,10 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	public void runAlgorithm() throws Exception {
 		long time = System.currentTimeMillis() ;
 		createInitialPopulation() ;
+		myPopulation.print(); 
 		while (! evoTerminationConditionIsReached()) {
 			evolve() ;
+			System.out.println(">>> EVOLUTION gen:" + generationNr) ;
 		}
 		time = System.currentTimeMillis() - time ;
 		System.out.println("** EVO") ;

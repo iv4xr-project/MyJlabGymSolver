@@ -96,6 +96,14 @@ public class MyTestingAI {
 		if (MyConfig.ALG.equals("Evo")) {
 			var evo = new Evolutionary(150,150,agentConstructor) ;
 			DebugUtil.log("** Using Evolutionary-algorithm") ;
+			evo.maxPopulationSize = 8 ;
+			evo.numberOfElitesToKeepDuringSelection = 4 ;
+			evo.maxChromosomeLength = 6 ;
+			evo.setTotalSearchBudget(1000000) ;
+			evo.goalPredicate = S -> {
+				var B = (BeliefState) S ;
+				return B.worldmodel.elements.get("door6") != null && B.isOpen("door6") ;
+			} ;
 			evo.runAlgorithm() ;
 			var B = evo.myPopulation.getBest().belief ;
 			DebugUtil.pressEnter() ;

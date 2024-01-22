@@ -145,7 +145,7 @@ public class BaseSearchAlgorithm {
 			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
 			return true ;
 		}
-		if(getBelief().worldmodel.timestamp > 0 && getBelief().worldmodel.health <= 0) {
+		if(getBelief().worldmodel.timestamp > 0 && getBelief().worldmodel().health <= 0) {
 			DebugUtil.log(">>> THE AGENT DIED. Aaaaaw.");
 			return true ;
 		}
@@ -382,7 +382,7 @@ public class BaseSearchAlgorithm {
 				+ ", unused=" + Math.max(0,this.remainingSearchBudget)) ;
 		System.out.println("** #pairs tried=" + p) ;
 		System.out.print("** The agent is ") ;
-		System.out.println(getBelief().worldmodel.health > 0 ? "ALIVE" : "DEAD") ;
+		System.out.println(getBelief().worldmodel().health > 0 ? "ALIVE" : "DEAD") ;
 		System.out.print("** Search-goal: ") ;
 		if (goalPredicate == null) {
 			System.out.println(" none specified") ;

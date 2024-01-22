@@ -105,7 +105,7 @@ public class XBelief extends BeliefState {
 	
 	
 	void fakelyUnblockDoor(String door) {
-		for(Obstacle<LineIntersectable> o : pathfinder.obstacles) {
+		for(Obstacle<LineIntersectable> o : pathfinder().obstacles) {
 			LabEntity e = (LabEntity) o.obstacle ;
 			if (e.id == door) {
 				o.isBlocking = false ;
@@ -115,7 +115,7 @@ public class XBelief extends BeliefState {
 	}
 	
 	void restoreObstacleState(String door, boolean originalState) {
-		for(Obstacle<LineIntersectable> o : pathfinder.obstacles) {
+		for(Obstacle<LineIntersectable> o : pathfinder().obstacles) {
 			LabEntity e = (LabEntity) o.obstacle ;
 			if (e.id == door) {
 				o.isBlocking = originalState ;
@@ -125,7 +125,7 @@ public class XBelief extends BeliefState {
 	}
 	
 	void fakelyMakeAlldoorsBlocking(String exception) {
-		for(Obstacle<LineIntersectable> o : pathfinder.obstacles) {
+		for(Obstacle<LineIntersectable> o : pathfinder().obstacles) {
 			LabEntity e = (LabEntity) o.obstacle ;
 			if (e.type == "Door") {
 				o.isBlocking = true ;
@@ -139,7 +139,7 @@ public class XBelief extends BeliefState {
 	
 	Map<String,Boolean> getDoorsBlockingState() {
 		Map<String,Boolean> map = new HashMap<>() ;
-		for(Obstacle<LineIntersectable> o : pathfinder.obstacles) {
+		for(Obstacle<LineIntersectable> o : pathfinder().obstacles) {
 			LabEntity e = (LabEntity) o.obstacle ;
 			if (e.type == "Door") {
 				map.put(e.id,o.isBlocking) ;
@@ -149,7 +149,7 @@ public class XBelief extends BeliefState {
 	}
 	
 	void restoreDoorsBlockingState(Map<String,Boolean> originalState, String exception) {
-		for(Obstacle<LineIntersectable> o : pathfinder.obstacles) {
+		for(Obstacle<LineIntersectable> o : pathfinder().obstacles) {
 			LabEntity e = (LabEntity) o.obstacle ;
 			if (e.type == "Door") {
 				o.isBlocking = originalState.get(e.id) ;
@@ -164,7 +164,7 @@ public class XBelief extends BeliefState {
 	
 	
 	public boolean doorIsReachable(String door) {
-		LabEntity d = worldmodel.getElement(door) ;
+		LabEntity d = worldmodel().getElement(door) ;
 		Boolean isOpen = d.getBooleanProperty("isOpen") ;
 		//if(isOpen) {
 		//	return findPathTo(d.getFloorPosition(),true) != null ;
@@ -182,7 +182,7 @@ public class XBelief extends BeliefState {
 	}
 	
 	boolean buttonIsReachable(String button) {
-		LabEntity b = worldmodel.getElement(button) ;
+		LabEntity b = worldmodel().getElement(button) ;
 		var path = findPathTo(b.getFloorPosition(),true) ;
 		return path != null ;
 	}
@@ -192,7 +192,7 @@ public class XBelief extends BeliefState {
 	 * d reachable.
 	 */
 	String findAEnablingClosedDoor(String entity) {
-		LabEntity e = worldmodel.getElement(entity) ;
+		LabEntity e = worldmodel().getElement(entity) ;
 		boolean isDoor = e.type.equals("Door") ;
 		for(WorldEntity d2 : knownDoors()) {
 			if (d2.id.equals(entity)) continue ;
