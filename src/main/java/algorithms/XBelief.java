@@ -187,6 +187,18 @@ public class XBelief extends BeliefState {
 		return path != null ;
 	}
 	
+	List<LabEntity> reachableButtons() {
+		List<LabEntity> buttons = new LinkedList<>() ;
+		for (var e : worldmodel().elements.values()) {
+			var e_ = (LabEntity) e ;
+			if (e_.type.equals(LabEntity.SWITCH)
+					&& findPathTo(e_.getFloorPosition(),true) != null
+					)
+				buttons.add(e_) ;		
+		}
+		return buttons ;
+	}
+	
 	/*.
 	 * Given an unreachable door d, find a closed door d2 that if it is open would make
 	 * d reachable.

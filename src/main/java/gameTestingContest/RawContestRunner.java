@@ -39,13 +39,17 @@ public class RawContestRunner {
      * in turn will generate the corresponding game content.
      */
     //static String levelName = "BM2021_diff3_R4_2_2" ;
-    static String levelName = "BM2021_diff2_R7_2_2" ;    
+    // static String levelName = "BM2021_diff2_R7_2_2" ;    
+    static String levelName = "buttons_doors_1" ;    
+    //static String levelName = "samira_8room" ;    
 
+    
     /**
      * Specify hefre the path to the directory where the level-file referred to by
      * {@link #levelName} above is stored.
      */
-    static String levelsDir = labRecruitesExeRootDir + "/src/test/resources/levels/contest";
+    //static String levelsDir = labRecruitesExeRootDir + "/src/test/resources/levels/contest";
+    static String levelsDir = labRecruitesExeRootDir + "/src/test/resources/levels";
 
     static LabRecruitsTestServer labRecruitsBinding;
 
@@ -62,7 +66,7 @@ public class RawContestRunner {
     static Supplier<MyTestingAI> mkAnInstanceOfMyTestingAI = () -> new MyTestingAI();
 
     /**
-     * Invoke this main method to run your MyTestingAI on a game-lavel you specified
+     * Invoke this main method to run your MyTestingAI on a game-level you specified
      * above.
      */
     public static void main(String[] args) throws Exception {
@@ -77,13 +81,18 @@ public class RawContestRunner {
         // let's now instantiate your test-algorithm/AI, and run it:
         MyTestingAI myTestingAI = mkAnInstanceOfMyTestingAI.get();
         
+        var agentId_ = MyConfig.agentId ;
+        if (agentId_ == null) agentId_ = "agent0" ;
+        final String agentId = agentId_ ;
+        
         myTestingAI.agentConstructor = dummy -> {
         	LabRecruitsEnvironment env2 = new LabRecruitsEnvironment(config);
-        	LabRecruitsTestAgent agent = new LabRecruitsTestAgent("agent0") // matches the ID in the CSV file
+        	LabRecruitsTestAgent agent = new LabRecruitsTestAgent(agentId) // matches the ID in the CSV file
     				.attachState(new XBelief())
     				.attachEnvironment(env2);
     		return agent ;
         } ;
+
         
         Set<Pair<String, String>> report = myTestingAI.exploreLRLogic(env);
         // printing the findings:

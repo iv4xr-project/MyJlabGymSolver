@@ -10,6 +10,9 @@ import agents.LabRecruitsTestAgent;
 import nl.uu.cs.aplib.utils.Pair;
 import world.LabEntity;
 
+/**
+ * Implementing evolutionary-search algorithm.
+ */
 public class Evolutionary extends BaseSearchAlgorithm {
 
 	public float mutationProbability  = 0.2f ;
@@ -21,7 +24,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 */
 	public boolean onlyExtendWithNewGene = true ;
 	
-	public int explorationBudget = 150 ;
+	public int explorationBudget = 500 ;
 	
 	public int maxPopulationSize = 30 ;
 	
@@ -31,7 +34,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	public int generationNr = 0 ;
 	
-	public int maxFitness = 10000 ;
+	public float maxFitness = 10000 ;
 	
 	List<String> knownButtons = new LinkedList<>() ;
 	
@@ -53,12 +56,12 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	public static class ChromosomeInfo {
 		public List<String> chromosome ;
-		public float value ;
+		public float fitness ;
 		public XBelief belief ;
 		
 		ChromosomeInfo(List<String> chromosome, float value, XBelief belief) {
 			this.chromosome = chromosome ;
-			this.value = value ;
+			this.fitness = value ;
 			this.belief = belief ;
 		}
 	}
@@ -77,13 +80,13 @@ public class Evolutionary extends BaseSearchAlgorithm {
  				population.add(CI) ;
  				return ;
  			}
- 			if (population.get(population.size() - 1).value >= CI.value) {
+ 			if (population.get(population.size() - 1).fitness >= CI.fitness) {
  				population.add(CI) ;
  				return ;
  			}
 			int k = 0 ;
 			for (var M : population) {
-				if (M.value < CI.value) {
+				if (M.fitness < CI.fitness) {
 					break ;
 				}
 				k++ ;
@@ -125,7 +128,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			int k=0 ;
 			System.out.println("** #chromosomes=" + population.size()) ;
 			for (var CI : population) {
-				System.out.println("** [" + k + "] val=" + CI.value + ", " + CI.chromosome
+				System.out.println("** [" + k + "] val=" + CI.fitness + ", " + CI.chromosome
 						+ ", #connections:" + CI.belief.getConnections().size() 
 						) ;
 				k++ ;
@@ -143,9 +146,9 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		System.out.println("** Generation = " + generationNr) ;
 		System.out.println("** #population= " + myPopulation.population.size()) ;
 		if ( myPopulation.population.isEmpty()) return ;
-		System.out.println("** best-value = " + myPopulation.population.get(0).value) ;
-		var avrg = myPopulation.population.stream().collect(Collectors.averagingDouble(CI -> (double) CI.value)) ;
-		System.out.println("** avrg-value = " + avrg) ;
+		System.out.println("** best-fitness-value = " + myPopulation.population.get(0).fitness) ;
+		var avrg = myPopulation.population.stream().collect(Collectors.averagingDouble(CI -> (double) CI.fitness)) ;
+		System.out.println("** avrg-fitness-value = " + avrg) ;
 		myPopulation.print(); 
 	}
 	
@@ -180,17 +183,17 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		if (knownButtons.size() == 1)  {
 			List<String> tau = new LinkedList<>() ;
 			tau.add(knownButtons.get(0)) ;
-			myPopulation.add(value(tau));
+			myPopulation.add(fitnessValue(tau));
 		}
 		else if (knownButtons.size() == 2 && maxChromosomeLength >= 2)  {
 			List<String> tau = new LinkedList<>() ;
 			tau.add(knownButtons.get(0)) ;
 			tau.add(knownButtons.get(1)) ;
-			myPopulation.add(value(tau));
+			myPopulation.add(fitnessValue(tau));
 			if (maxPopulationSize > 1) {
 				tau.add(knownButtons.get(1)) ;
 				tau.add(knownButtons.get(0)) ;
-				myPopulation.add(value(tau));	
+				myPopulation.add(fitnessValue(tau));	
 			}
 		}
 		else {
@@ -208,7 +211,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			   }
 			   if (tau.isEmpty())
 				   break;
-		   myPopulation.add(value(tau)); 
+		   myPopulation.add(fitnessValue(tau)); 
 		   }
 		}
 		generationNr++ ;
@@ -229,7 +232,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			float r = rnd.nextFloat() ;
 			if (r <= mutationProbability) {
 				var tau = mutate(sigma) ;
-				if (! myPopulation.memberOf(tau))
+				if (tau!= null && ! myPopulation.memberOf(tau))
 					newBatch.add(tau) ;
 			}
 			else if (sigma.size() < maxChromosomeLength 
@@ -248,12 +251,17 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				var sigma1 = parents.remove(rnd.nextInt(parents.size())) ;
 				var sigma2 = parents.remove(rnd.nextInt(parents.size())) ;
 				var tau = crossOver(sigma1,sigma2) ;
-				newBatch.add(tau) ;
+				if (tau != null)
+				   newBatch.add(tau) ;
 			}
 		}
 		
 		for (var tau : newBatch) {
-			myPopulation.add(value(tau));
+			var info = fitnessValue(tau) ;
+			myPopulation.add(info);
+			if (info.fitness >= maxFitness) 
+				// found a solution!
+				break ;
 		}
 		
 		myPopulation.applySelection(maxPopulationSize, numberOfElitesToKeepDuringSelection);
@@ -360,42 +368,60 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 * calculated at the state that results from the execution so far.
 	 * 
 	 */
-	ChromosomeInfo value(List<String> chromosome) throws Exception {
+	ChromosomeInfo fitnessValue(List<String> chromosome) throws Exception {
 		instantiateAgent() ;
 		int remainingBudget = this.remainingSearchBudget ;
 		long t0 = System.currentTimeMillis() ;
 		System.out.println(">>> evaluating chromosome: " + chromosome);
+		
+		boolean goalPredicateSolved = false ;
+		
+		int k = 0 ;
 		for (var button : chromosome) {
 			 var status = solveGoal("Toggling button " + button, entityInteracted(button), budget_per_task) ;
 			 // if the agent is dead, break:
 			 if (agent.getState().worldmodel().health <= 0)
 				 break ;
+			 // also break the execution if a button fails:
+			 if (!status.success()) 
+				 break ;
 			 
 			 // reset exploration, then do full explore:
 			 agent.getState().pathfinder().wipeOutMemory();
 			 doExplore(explorationBudget) ;
-			 // also break the execution if a button fails:
-			 if (!status.success()) 
+			 
+			 // check if the goal-predicate if we have one, is solved:
+			 var S = getBelief() ;
+			 if (goalPredicate != null && goalPredicate.test(S)) {
+				// the search-goal is solved
+				 goalPredicateSolved = true ;
 				 break ;
+			}
+			k++ ;
 		}
 				
 		var S = getBelief() ;
-		int value = 0 ;
+		float fitness = 0 ;
 		
-		if (goalPredicate != null && goalPredicate.test(S)) {
-			// the search-goal is solved
-			value = maxFitness ;
+		if (goalPredicateSolved) {
+			fitness = maxFitness ;
+			// drop the trailing part of the chromosome:
+			int tobeRemoved = chromosome.size() - k - 1 ;
+			while (tobeRemoved > 0) {
+				chromosome.remove(chromosome.size()-1) ;
+				tobeRemoved -- ;
+			}
 		}
 		else {
 			//System.out.println(">>> #DOORS=" + S.knownDoors().size()) ;
 			//for (var D : S.knownDoors()) {
 			//	if (S.isOpen(D.id)) value++ ;
 			//}
-			value = S.getConnections().size() ;
+			fitness = S.getConnections().size() ;
 		}
 		System.out.println(">>> chromosome: " 
 		   + chromosome
-		   + ", VALUE=" + value);
+		   + ", FITNESS-VAL=" + fitness);
 		// also add newly-found buttons to the list of known buttons:
 		for (var B : S.knownButtons()) {
 			if (! knownButtons.contains(B.id)) {
@@ -406,7 +432,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		// override the calculation of remaining budget:
 		long time = System.currentTimeMillis() - t0 ;
 		this.remainingSearchBudget = remainingBudget - (int) time ;
-		return new ChromosomeInfo(chromosome,value,S) ;
+		return new ChromosomeInfo(chromosome,fitness,S) ;
 	}
 	
 	
@@ -419,7 +445,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	boolean evoTerminationConditionIsReached() {
 		if (myPopulation.population.size() > 0) {
 			var best = myPopulation.getBest() ;
-			if (this.remainingSearchBudget <= 0 || best.value >= maxFitness)
+			if (this.remainingSearchBudget <= 0 || best.fitness >= maxFitness)
 				return true ;
 			if (goalPredicate != null && goalPredicate.test(best.belief))
 				return true ;

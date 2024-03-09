@@ -26,6 +26,7 @@ import static agents.tactics.GoalLib.*;
 import static agents.tactics.TacticLib.*;
 import world.BeliefState;
 import world.LabEntity;
+import world.LabWorldModel;
 
 /**
  * This method provides a single method, exploreLRLogic, that you have to
@@ -96,14 +97,31 @@ public class MyTestingAI {
 		if (MyConfig.ALG.equals("Evo")) {
 			var evo = new Evolutionary(150,150,agentConstructor) ;
 			DebugUtil.log("** Using Evolutionary-algorithm") ;
-			evo.maxPopulationSize = 8 ;
-			evo.numberOfElitesToKeepDuringSelection = 4 ;
-			evo.maxChromosomeLength = 6 ;
+			evo.maxPopulationSize = 10 ;
+			evo.numberOfElitesToKeepDuringSelection = 7 ;
+			evo.maxChromosomeLength = 8 ;
 			evo.setTotalSearchBudget(1000000) ;
-			evo.goalPredicate = S -> {
-				var B = (BeliefState) S ;
-				return B.worldmodel.elements.get("door6") != null && B.isOpen("door6") ;
-			} ;
+			if (MyConfig.target != null) {
+				if (MyConfig.targetType.equals("door")) {
+					String doorId = MyConfig.target ;
+					evo.goalPredicate = S -> {
+						var B = (BeliefState) S ;
+						return B.worldmodel.elements.get(doorId) != null && B.isOpen(doorId) ;
+					} ;
+				}
+				if (MyConfig.targetType.equals("flag")) {
+					String flagId = MyConfig.target ;
+					evo.goalPredicate = S -> {
+						var B = (BeliefState) S ;
+						var flag = (LabEntity) B.worldmodel().elements.get(flagId) ;
+						return flag != null 
+								&& Vec3.distSq(flag.getFloorPosition(), 
+								               B.worldmodel().getFloorPosition()) <= 1f  ;
+					} ;
+				}
+				
+			}
+			
 			evo.runAlgorithm() ;
 			var B = evo.myPopulation.getBest().belief ;
 			DebugUtil.pressEnter() ;

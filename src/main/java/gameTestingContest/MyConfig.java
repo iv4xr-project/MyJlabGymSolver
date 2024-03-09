@@ -9,4 +9,14 @@ public class MyConfig {
 	
 	static public String ALG = "Evo" ;
 	
+	//static public String target = null ;
+
+	static public String target = "door3" ;
+	
+	static public String targetType = "door" ; // "door" or "flag"
+	
+	//static public String agentId = null ;
+
+	static public String agentId = "agent1" ;
+	
 }
