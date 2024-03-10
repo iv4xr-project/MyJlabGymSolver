@@ -13,7 +13,8 @@ public class MyConfig {
 	
 	//static public String target = null ;
 
-	static public String target = "door3" ;
+	//static public String target = "door3" ;
+	static public String target = "door16" ;
 	
 	static public String targetType = "door" ; // "door" or "flag"
 	

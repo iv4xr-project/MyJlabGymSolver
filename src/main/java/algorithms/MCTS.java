@@ -73,7 +73,8 @@ public class MCTS extends BaseSearchAlgorithm {
 		void backPropagate(float newReward) {
 			numberOfPlays++ ;
 			totalReward += newReward ;
-			averageReward = averageReward / (float) numberOfPlays ;
+			averageReward = totalReward / (float) numberOfPlays ;
+			//System.out.println(">>> update avrg rew: " + averageReward) ;
 			if (children!=null && children.stream().allMatch(ch -> ch.fullyExplored))
 				fullyExplored = true ;
 			if (parent != null)
@@ -397,6 +398,7 @@ public class MCTS extends BaseSearchAlgorithm {
 	boolean terminationConditionIsReached() {
 		if (remainingSearchBudget <= 0) {
 			DebugUtil.log("*** TOTAL BUDGET IS EXHAUSTED.") ;
+			System.out.println("*** TOTAL BUDGET IS EXHAUSTED.") ;
 			return true ;
 		}
 		if (isGoalSolved()) {
@@ -405,6 +407,7 @@ public class MCTS extends BaseSearchAlgorithm {
 		}
 		if (mctree.fullyExplored) {
 			DebugUtil.log("*** The search tree is fully explored.") ;
+			System.out.println("*** The search tree is fully explored.") ;
 			return true ;
 		}
 		return false ;
