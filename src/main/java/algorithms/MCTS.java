@@ -249,7 +249,7 @@ public class MCTS extends BaseSearchAlgorithm {
 		}
 		
 		int depth = trace.size() ;
-		boolean goalPredicateSolved = false ;
+		//boolean goalPredicateSolved = false ;
 		while (depth < maxdepth) {
 			var S = getBelief() ;
 			var buttons = S.reachableButtons() ;
@@ -274,7 +274,7 @@ public class MCTS extends BaseSearchAlgorithm {
 			 S = getBelief() ;
 			 if (goalPredicate != null && goalPredicate.test(S)) {
 				// the search-goal is solved
-				 goalPredicateSolved = true ;
+				 //goalPredicateSolved = true ;
 				 break ;
 			}
 			

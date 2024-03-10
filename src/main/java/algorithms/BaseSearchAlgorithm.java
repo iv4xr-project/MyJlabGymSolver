@@ -201,17 +201,14 @@ public class BaseSearchAlgorithm {
 		getBelief().clearGoalLocation();
 		getBelief().clearStuckTrackingInfo();
 		agent.setGoal(G) ;
-		long t0 = System.currentTimeMillis() ;
 		int i=0 ;
 		//WorldEntity lastInteractedButton = null ;
-		while (G.getStatus().inProgress() && ! terminationConditionIsReached()) {
+		while (G.getStatus().inProgress() && !terminationConditionIsReached()) {
 			if (budget>0 && i >= budget) {
 				DebugUtil.log("*** Goal-level budget (" + budget + " turns) is EXHAUSTED.") ;
 				break ;
 			}
 			DebugUtil.log("*** " + turn + ", " + agent.getState().id + " @" + agent.getState().worldmodel.position);
-			remainingSearchBudget = remainingSearchBudget - (int) (System.currentTimeMillis() - t0) ;
-			t0 = System.currentTimeMillis() ;
 			Thread.sleep(50);
 			i++; turn++ ;
 			agent.update();
@@ -233,8 +230,6 @@ public class BaseSearchAlgorithm {
 				}
 			}
 		}
-		remainingSearchBudget = remainingSearchBudget - (int) (System.currentTimeMillis() - t0) ;
-		
 		// agent.printStatus();	
 		DebugUtil.log("*** Goal " + goalDesc + " terminated. Consumed turns: " + i + ". Status: " + G.getStatus()) ;
 		
@@ -381,15 +376,20 @@ public class BaseSearchAlgorithm {
 		long t0 = System.currentTimeMillis() ;
 		int p = 0 ;
 		while (! terminationConditionIsReached()) {
+			long t1 = System.currentTimeMillis() ;
 			doExplore(explorationBudget) ;
 			var buttons = getBelief().knownButtons() ;
 			var doors = getBelief().knownDoors() ;
 			if(buttons.isEmpty()  || doors.isEmpty()) {
+				long duration = System.currentTimeMillis() - t1 ;
+				this.remainingSearchBudget = this.remainingSearchBudget - (int) duration ;
 				break ;
 			}
 			WorldEntity B0 = buttons.get(rnd.nextInt(buttons.size())) ;
 			WorldEntity D0 = doors.get(rnd.nextInt(doors.size())) ;
 			checkButtonDoorPair(B0.id,D0.id,budget_per_task) ;
+			long duration = System.currentTimeMillis() - t1 ;
+			this.remainingSearchBudget = this.remainingSearchBudget - (int) duration ;
 			p++ ;
 		}	
 		var time = System.currentTimeMillis() - t0 ;

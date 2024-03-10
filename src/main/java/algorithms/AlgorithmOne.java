@@ -56,7 +56,9 @@ public class AlgorithmOne extends BaseSearchAlgorithm {
 		todoSet.addAll(getBelief().knownDoors().stream().map(D -> D.id).collect(Collectors.toList())) ;
 		
 		while (!todoSet.isEmpty() && !terminationConditionIsReached()) {
-
+			
+			long t1 = System.currentTimeMillis() ;
+			
 			String nextDoorToOpen = todoSet.get(0) ;
 			if (! getBelief().isOpen(nextDoorToOpen)) {
 				// if the door is closed try to open it
@@ -124,6 +126,8 @@ public class AlgorithmOne extends BaseSearchAlgorithm {
 			}
 			todoSet.remove(0) ;
 			doneSet.add(nextDoorToOpen) ;
+			long duration = System.currentTimeMillis() - t1 ;
+			this.remainingSearchBudget = this.remainingSearchBudget - (int) duration ;
 		}
 		
 		var time = System.currentTimeMillis() - t0 ;
