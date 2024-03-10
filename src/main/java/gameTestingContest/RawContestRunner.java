@@ -42,8 +42,8 @@ public class RawContestRunner {
      */
     //static String levelName = "BM2021_diff3_R4_2_2" ;
     // static String levelName = "BM2021_diff2_R7_2_2" ;    
-    static String levelName = "buttons_doors_1" ;    
-    //static String levelName = "samira_8room" ;    
+    //static String levelName = "buttons_doors_1" ;    
+    static String levelName = "samira_8room" ;    
 
     
     /**

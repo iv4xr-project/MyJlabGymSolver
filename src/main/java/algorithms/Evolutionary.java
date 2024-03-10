@@ -40,16 +40,13 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	Function <Void,LabRecruitsTestAgent> agentConstructor ;
 	
-	Evolutionary() { super() ; }
-	
-	public Evolutionary(int budget_per_task,
-			int explorationBudget,
-			Function <Void,LabRecruitsTestAgent> agentConstructor) {
-		this() ;
-		this.budget_per_task = budget_per_task ;
-		this.explorationBudget = explorationBudget ;
-		this.agentConstructor = agentConstructor ;
+	Evolutionary() { 
 		myPopulation.rnd = this.rnd ;
+	}
+	
+	public Evolutionary(Function <Void,LabRecruitsTestAgent> agentConstructor) {
+		this() ;
+		this.agentConstructor = agentConstructor ;
 	}
 	
 	public static class ChromosomeInfo {
@@ -221,9 +218,8 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	}
 	
 	void evolve() throws Exception {
-		// create mutation/extension:
-		int remainingBudget = this.remainingSearchBudget ;
 		long t0 = System.currentTimeMillis() ;
+		// create mutation/extension:
 		List<List<String>> newBatch = new LinkedList<>() ;
 		for (var CI : myPopulation.population) {
 			var sigma = CI.chromosome ;
@@ -269,7 +265,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		printStatus() ;
 		// override the calculation of remaining budget:
 		long time = System.currentTimeMillis() - t0 ;
-		this.remainingSearchBudget = remainingBudget - (int) time ;
+		this.remainingSearchBudget = this.remainingSearchBudget - (int) time ;
 
 	}
 	
@@ -370,8 +366,6 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 */
 	ChromosomeInfo fitnessValue(List<String> chromosome) throws Exception {
 		instantiateAgent() ;
-		int remainingBudget = this.remainingSearchBudget ;
-		long t0 = System.currentTimeMillis() ;
 		System.out.println(">>> evaluating chromosome: " + chromosome);
 		
 		boolean goalPredicateSolved = false ;
@@ -435,8 +429,6 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		}
 		closeEnv() ;
 		// override the calculation of remaining budget:
-		long time = System.currentTimeMillis() - t0 ;
-		this.remainingSearchBudget = remainingBudget - (int) time ;
 		return new ChromosomeInfo(chromosome,fitness,S) ;
 	}
 	
@@ -444,16 +436,25 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	/**
 	 * The same as {@link BaseSearchAlgorithm#terminationConditionIsReached()},
 	 * but ignore whether the agent is dead or alive. This is for deciding the
-	 * termination of the whole Evo-iteraion. The agent's status of dead/alive
+	 * termination of the whole Evo-iteration. The agent's status of dead/alive
 	 * is less relevant here
 	 */
-	boolean evoTerminationConditionIsReached() {
+	@Override
+	boolean terminationConditionIsReached() {
+		if (remainingSearchBudget <= 0) {
+			DebugUtil.log("*** TOTAL BUDGET IS EXHAUSTED.") ;
+			return true ;
+		}
+		if (isGoalSolved()) {
+			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
+			return true ;
+		}
 		if (myPopulation.population.size() > 0) {
 			var best = myPopulation.getBest() ;
-			if (this.remainingSearchBudget <= 0 || best.fitness >= maxFitness)
+			if (best.fitness >= maxFitness) {
+				DebugUtil.log("*** Maximum fitness is reached.") ;
 				return true ;
-			if (goalPredicate != null && goalPredicate.test(best.belief))
-				return true ;
+			}
 		}
 		return false ;
 	}
@@ -464,7 +465,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		long time = System.currentTimeMillis() ;
 		createInitialPopulation() ;
 		myPopulation.print(); 
-		while (! evoTerminationConditionIsReached()) {
+		while (! terminationConditionIsReached()) {
 			evolve() ;
 			System.out.println(">>> EVOLUTION gen:" + generationNr) ;
 		}

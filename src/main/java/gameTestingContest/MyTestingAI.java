@@ -9,6 +9,7 @@ import algorithms.AlgorithmOne;
 import algorithms.BaseSearchAlgorithm;
 import algorithms.DebugUtil;
 import algorithms.Evolutionary;
+import algorithms.MCTS;
 import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.utils.Pair;
 import world.BeliefState;
@@ -85,15 +86,21 @@ public class MyTestingAI {
 		switch(MyConfig.ALG) {
 		
 		   case "Evo" : 
-			  var evo = new Evolutionary(150,150,agentConstructor) ;
+			  var evo = new Evolutionary(agentConstructor) ;
 			  DebugUtil.log("** Using Evolutionary-algorithm") ;
 			  evo.maxPopulationSize = 10 ;
 			  evo.numberOfElitesToKeepDuringSelection = 7 ;
 			  evo.maxChromosomeLength = 8 ;
-			  evo.explorationBudget = 500 ;
 			  algorithm = evo ;
 			  break ;
 			  
+		   case "MCTS" :
+			   var mcts = new MCTS(agentConstructor) ;
+			   DebugUtil.log("** Using MCTS-algorithm") ;
+			   mcts.maxdepth = 8 ;
+			   algorithm = mcts ;
+			   break ;
+				  
 		   case "AOne" :	
 			   DebugUtil.log("** Using Algorithm-One") ;
 			   LabRecruitsTestAgent agent = agentConstructor.apply(null) ;
@@ -116,6 +123,8 @@ public class MyTestingAI {
 		}
 
 		algorithm.setTotalSearchBudget(MyConfig.searchbuget) ;
+		algorithm.budget_per_task = MyConfig.budget_per_task ;
+		algorithm.explorationBudget = MyConfig.explorationBudget ;
 
 		if (MyConfig.target != null) {
 			if (MyConfig.targetType.equals("door")) {

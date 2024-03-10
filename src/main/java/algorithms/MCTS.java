@@ -4,6 +4,7 @@ import static agents.tactics.GoalLib.entityInteracted;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import agents.LabRecruitsTestAgent;
 import nl.uu.cs.aplib.agents.State;
@@ -25,7 +26,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * finding such a solving rollout, which is done by giving it intermediate
  * rewards. MCTS is then used to learn to maximize this intermediate reward.
  * 
- * <p>To accommodate the above described use of MCTS in LR, we add a "search-mode"
+ * <p>To accommodate the above described use of MCTS in LR, we add a "single-search-mode"
  * to MCTS. When this mode is enabled, the algorithm stops when a winning rollout
  * is found, the winning sequence of action can be obtained.
  */
@@ -73,7 +74,7 @@ public class MCTS extends BaseSearchAlgorithm {
 			numberOfPlays++ ;
 			totalReward += newReward ;
 			averageReward = averageReward / (float) numberOfPlays ;
-			if (children.stream().allMatch(ch -> ch.fullyExplored))
+			if (children!=null && children.stream().allMatch(ch -> ch.fullyExplored))
 				fullyExplored = true ;
 			if (parent != null)
 				parent.backPropagate(newReward) ;
@@ -84,7 +85,7 @@ public class MCTS extends BaseSearchAlgorithm {
 		 * root.
 		 */
 		void propagateFullyExploredStatus() {
-			if (children.stream().allMatch(ch -> ch.fullyExplored))
+			if (children != null && children.stream().allMatch(ch -> ch.fullyExplored))
 				fullyExplored = true ;
 			if (parent != null)
 				parent.propagateFullyExploredStatus() ;
@@ -104,7 +105,7 @@ public class MCTS extends BaseSearchAlgorithm {
 			List<String> tr =  getPathLeadingToThisNode()
 					  .stream()
 					  .map(nd -> nd.action)
-					  .toList() ;
+					  .collect(Collectors.toList()) ;
 			// first element is null, remove it:
 			tr.remove(0) ;
 			return tr ;
@@ -129,19 +130,31 @@ public class MCTS extends BaseSearchAlgorithm {
 	/**
 	 * The Monte Carlo Tree.
 	 */
-	Node mctree ;
+	public Node mctree ;
 	
 	/**
 	 * When true, the mcts algorithm will terminates as soon as a winning play is
 	 * found. Default is true.
 	 */
-	boolean searchMode = true ;
+	public boolean singleSearchMode = true ;
 	
-	List<String> winningplay = null ;
+	public List<String> winningplay = null ;
 	
-	int maxdepth = 8 ;
+	Set<Pair<String,String>> discoveredConnections = new HashSet<>() ;
 	
-	float maxReward = 10000 ;
+	public int maxdepth = 8 ;
+	
+	public float maxReward = 10000 ;
+	
+	MCTS() { 
+		mctree = new Node() ;
+		mctree.depth = 0 ;
+	}
+	
+	public MCTS(Function <Void,LabRecruitsTestAgent> agentConstructor) {
+		this() ;
+		this.agentConstructor = agentConstructor ;
+	}
 	
 	
 	void instantiateAgent() throws InterruptedException {
@@ -151,14 +164,16 @@ public class MCTS extends BaseSearchAlgorithm {
 		Thread.sleep(500) ;
 	}
 	
+	void closeEnv() {
+		agent.env().close() ;
+	}
+	
 	/**
 	 * Execute all the actions in the path towards and until the given node. The method
 	 * returns true if the whole sequence can be executed, and else false.
 	 */
-	boolean runPath(Node node) throws Exception {
+	boolean runPath(Node node, boolean closeEnvAtTheEnd) throws Exception {
 		
-		long t0 = System.currentTimeMillis() ;
-
 		instantiateAgent() ;
 		
 		var trace = node.getTraceLeadingToThisNode() ;
@@ -166,6 +181,11 @@ public class MCTS extends BaseSearchAlgorithm {
 		System.out.println(">>> executing prefix " + trace);
 		
 		boolean success = true ;
+		
+		if (trace.isEmpty()) {
+			// special case when the trace is still emoty:
+			doExplore(explorationBudget) ;
+		}
 		
 		for (var button : trace) {
 			 var status = solveGoal("Toggling button " + button, entityInteracted(button), budget_per_task) ;
@@ -184,8 +204,12 @@ public class MCTS extends BaseSearchAlgorithm {
 			 agent.getState().pathfinder().wipeOutMemory();
 			 doExplore(explorationBudget) ;
 		}
-		long execTime = System.currentTimeMillis() - t0 ;
-		this.remainingSearchBudget = this.remainingSearchBudget  - (int) execTime ;
+		var cons = getBelief().getConnections() ;
+		if (cons.size() > discoveredConnections.size()) {
+			discoveredConnections = cons ;
+		}
+		if (closeEnvAtTheEnd)
+			closeEnv() ;
 		return success ;
 	}
 	
@@ -197,7 +221,7 @@ public class MCTS extends BaseSearchAlgorithm {
 		if (goalPredicate != null && goalPredicate.test(S)) {
 			return maxReward ;
 		}
-		return S.getConnections().size() ;
+		return S.getConnections().size() + S.getNumberOfOpenDoors() ;
 	}
 	
 	/**
@@ -212,22 +236,17 @@ public class MCTS extends BaseSearchAlgorithm {
 		
 		List<String> trace = node.getTraceLeadingToThisNode() ;
 		
-		var success = runPath(node) ;
-
-		long t0 = System.currentTimeMillis() ;
+		var success = runPath(node,false) ;
 
 		if (!success) {
 			// if the trace replay is not successful, we don't continue:
 			PlayResult R = new PlayResult() ;
 			R.trace = trace ;
 			R.reward = rewardOfCurrentGameState() ;
-			long execTime = System.currentTimeMillis() - t0 ;
-			this.remainingSearchBudget = this.remainingSearchBudget  - (int) execTime ;
+			closeEnv();
 			return R ;
 		}
 		
-		
-
 		int depth = trace.size() ;
 		boolean goalPredicateSolved = false ;
 		while (depth < maxdepth) {
@@ -238,7 +257,8 @@ public class MCTS extends BaseSearchAlgorithm {
 			trace.add(chosen.id) ;
 			// ask the agent to toggle the button:
 			var status = solveGoal("Toggling button " + chosen.id, entityInteracted(chosen.id), budget_per_task) ;
-			 // if the agent is dead, break:
+			depth++ ;
+			// if the agent is dead, break:
 			 if (agent.getState().worldmodel().health <= 0)
 				 break ;
 			 // also break the execution if a button fails:
@@ -259,19 +279,22 @@ public class MCTS extends BaseSearchAlgorithm {
 			
 		}
 		
+		var cons = getBelief().getConnections() ;
+		if (cons.size() > discoveredConnections.size()) {
+			discoveredConnections = cons ;
+		}
+		
 		PlayResult R = new PlayResult() ;
 		R.trace = trace ;
 		R.reward = rewardOfCurrentGameState() ;
-		long execTime = System.currentTimeMillis() - t0 ;
-		this.remainingSearchBudget = this.remainingSearchBudget  - (int) execTime ;
+		closeEnv();
 		return R ;
 		
 	}
 		
 	List<Node> generateChildren(Node node) throws Exception {
-		long t0 = System.currentTimeMillis() ;
 		List<Node> children = new LinkedList<>() ;
-		var success = runPath(node) ;
+		var success = runPath(node,true) ;
 		if (success) {
 			var S = getBelief() ;
 			var buttons = S.reachableButtons() ;
@@ -301,17 +324,24 @@ public class MCTS extends BaseSearchAlgorithm {
 		return  chooseLeaf(bestChild) ;
 	}
 	
+	/**
+	 * The MCTS run.
+	 */
 	void mcts() throws Exception {
-		while (remainingSearchBudget > 0 && !mctree.fullyExplored) {
+		while (! terminationConditionIsReached()) {
+			long t0 = System.currentTimeMillis() ;
 			Node leaf = chooseLeaf(mctree) ;
 			evaluateLeaf(leaf) ;
-			// TODO adjust budget
-			if (searchMode && winningplay != null)
-				break ;
+			System.out.println(">>> MCTS #plays = " + mctree.numberOfPlays 
+					+ ", avrg reward=" + mctree.averageReward) ;
+			long time = System.currentTimeMillis() - t0 ;
+			this.remainingSearchBudget = this.remainingSearchBudget - (int) time ;
 		}	
 	}
 	
 	void evaluateLeaf(Node leaf) throws Exception {
+		
+		System.out.println(">>> EVAL " + leaf.action) ;
 		
 		if (leaf.terminal || leaf.fullyExplored) 
 			throw new IllegalArgumentException() ;
@@ -320,22 +350,25 @@ public class MCTS extends BaseSearchAlgorithm {
 		if (leaf.depth >= maxdepth) {
 			leaf.terminal = true ;
 			leaf.fullyExplored = true ;
-			runPath(leaf) ;
+			runPath(leaf,true) ;
 			var R = rewardOfCurrentGameState() ;
 			leaf.backPropagate(R);
 			// the case when the state after this node is a winning state:
-			if (searchMode && R >= maxReward) {
+			if (singleSearchMode && R >= maxReward) {
 				winningplay = leaf.getTraceLeadingToThisNode() ;
+				discoveredConnections = getBelief().getConnections()  ;
 			}
 			return ;			
 		}
 		
-		// leaf is not at max-depth and is has not been sampled/played before:
+		// leaf is not at max-depth and has not been sampled/played before:
 		if (leaf.numberOfPlays == 0) {
+			System.out.println(">>> ROLLOUT") ;
 			var R = rollout(leaf) ;
 			leaf.backPropagate(R.reward) ;
-			if (searchMode && R.reward >= maxReward) {
+			if (singleSearchMode && R.reward >= maxReward) {
 				winningplay = R.trace ;
+				discoveredConnections = getBelief().getConnections()  ;
 			}
 			return ;
 		}
@@ -350,6 +383,8 @@ public class MCTS extends BaseSearchAlgorithm {
 			return ;
 		}
 		
+		System.out.println(">>> EXPAND") ;
+
 		// else, go to the first child, and evaluate it:
 		for (var ch : leaf.children) {
 			ch.parent = leaf ;
@@ -358,41 +393,56 @@ public class MCTS extends BaseSearchAlgorithm {
 		evaluateLeaf(leaf.children.get(0)) ;
 	}
 	
+	@Override
+	boolean terminationConditionIsReached() {
+		if (remainingSearchBudget <= 0) {
+			DebugUtil.log("*** TOTAL BUDGET IS EXHAUSTED.") ;
+			return true ;
+		}
+		if (isGoalSolved()) {
+			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
+			return true ;
+		}
+		if (mctree.fullyExplored) {
+			DebugUtil.log("*** The search tree is fully explored.") ;
+			return true ;
+		}
+		return false ;
+	}
+	
 	
 	@Override
 	public void runAlgorithm() throws Exception {
 		long time = System.currentTimeMillis() ;
-		/*
-		createInitialPopulation() ;
-		myPopulation.print(); 
-		while (! evoTerminationConditionIsReached()) {
-			evolve() ;
-			System.out.println(">>> EVOLUTION gen:" + generationNr) ;
-		}
+		mcts() ;
 		time = System.currentTimeMillis() - time ;
-		System.out.println("** EVO") ;
+		System.out.println("** MCTS") ;
 		System.out.println("** total-runtime=" + time + ", #turns=" + this.turn) ;
 		System.out.println("** Total budget=" + this.totalSearchBudget
 				+ ", unused=" + Math.max(0,this.remainingSearchBudget)) ;
-		printStatus() ;
-		*/
+		System.out.println("** #plays=" + mctree.numberOfPlays) ;
+		System.out.println("** avrg reward=" + mctree.averageReward) ;
+		System.out.print("** Search-goal: ") ;
+		if (goalPredicate == null) {
+			System.out.println(" none specified") ;
+		}
+		else {
+			System.out.println(isGoalSolved() ? "ACHIEVED by " + this.winningplay 
+					: "NOT-achieved") ;
+		}
 	}
 	
 	@Override
 	public Set<Pair<String,String>> getDiscoveredConnections() {
-		//var B = myPopulation.getBest().belief ;
-		//return B.getConnections();
-		// todo
-		return null ;
+		return this.discoveredConnections ;
 	}
 	
+	/**
+	 * Only relevant for single-search-mode.
+	 */
 	@Override
 	public boolean isGoalSolved() {
-		//if (goalPredicate != null) 
-		//	return goalPredicate.test(myPopulation.getBest().belief) ;
-		//return false ;
-		// todo
-		return false ;
+		return winningplay != null ;
 	}
 	
 

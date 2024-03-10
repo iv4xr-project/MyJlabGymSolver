@@ -150,12 +150,15 @@ public class BaseSearchAlgorithm {
 		}
 	}
 	
+	/**
+	 * Define the termination condition of this algorithm.
+	 */
 	boolean terminationConditionIsReached() {
 		if (remainingSearchBudget <= 0) {
 			DebugUtil.log("*** TOTAL BUDGET IS EXHAUSTED.") ;
 			return true ;
 		}
-		if (goalPredicate != null && goalPredicate.test(getBelief())) {
+		if (isGoalSolved()) {
 			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
 			return true ;
 		}
