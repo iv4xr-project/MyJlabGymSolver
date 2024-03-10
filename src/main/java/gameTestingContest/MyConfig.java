@@ -13,8 +13,8 @@ public class MyConfig {
 	
 	//static public String target = null ;
 
-	//static public String target = "door3" ;
-	static public String target = "door16" ;
+	static public String target = "door3" ;
+	//static public String target = "door5" ;
 	
 	static public String targetType = "door" ; // "door" or "flag"
 	
@@ -27,6 +27,12 @@ public class MyConfig {
 	 */
 	//static public int searchbuget = 180000 ;
 	static public int searchbuget = 1000000 ;
+	
+	/**
+	 * A number K such that there exists a sequence of button-interactions of
+	 * length at most K, that solve the goal, if a goal is given.
+	 */
+	static public int solutionLengthUpperBound = 4 ;
 	
 	/**
 	 * Budget for doing a single "task", typically for finding and toggling a button.

@@ -90,14 +90,14 @@ public class MyTestingAI {
 			  DebugUtil.log("** Using Evolutionary-algorithm") ;
 			  evo.maxPopulationSize = 10 ;
 			  evo.numberOfElitesToKeepDuringSelection = 7 ;
-			  evo.maxChromosomeLength = 8 ;
+			  evo.maxChromosomeLength = MyConfig.solutionLengthUpperBound ;
 			  algorithm = evo ;
 			  break ;
 			  
 		   case "MCTS" :
 			   var mcts = new MCTS(agentConstructor) ;
 			   DebugUtil.log("** Using MCTS-algorithm") ;
-			   mcts.maxdepth = 8 ;
+			   mcts.maxdepth = MyConfig.solutionLengthUpperBound  ;
 			   algorithm = mcts ;
 			   break ;
 				  
