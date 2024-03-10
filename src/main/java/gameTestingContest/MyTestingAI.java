@@ -1,32 +1,18 @@
 package gameTestingContest;
 
-import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import agents.LabRecruitsTestAgent;
-import agents.tactics.GoalLib;
 import algorithms.AlgorithmOne;
 import algorithms.BaseSearchAlgorithm;
 import algorithms.DebugUtil;
 import algorithms.Evolutionary;
-import algorithms.Rooms;
-import algorithms.XBelief;
-import environments.LabRecruitsEnvironment;
-import eu.iv4xr.framework.mainConcepts.TestDataCollector;
-import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
-import examples.Example1;
-import nl.uu.cs.aplib.mainConcepts.*;
-import static nl.uu.cs.aplib.AplibEDSL.*;
 import nl.uu.cs.aplib.utils.Pair;
-import static agents.tactics.GoalLib.*;
-import static agents.tactics.TacticLib.*;
 import world.BeliefState;
 import world.LabEntity;
-import world.LabWorldModel;
 
 /**
  * This method provides a single method, exploreLRLogic, that you have to
@@ -92,81 +78,82 @@ public class MyTestingAI {
 	 *         unconnected.
 	 * 
 	 */
-	public Set<Pair<String, String>> exploreLRLogic(LabRecruitsEnvironment environment) throws Exception {
-
-		if (MyConfig.ALG.equals("Evo")) {
-			var evo = new Evolutionary(150,150,agentConstructor) ;
-			DebugUtil.log("** Using Evolutionary-algorithm") ;
-			evo.maxPopulationSize = 10 ;
-			evo.numberOfElitesToKeepDuringSelection = 7 ;
-			evo.maxChromosomeLength = 8 ;
-			evo.setTotalSearchBudget(1000000) ;
-			if (MyConfig.target != null) {
-				if (MyConfig.targetType.equals("door")) {
-					String doorId = MyConfig.target ;
-					evo.goalPredicate = S -> {
-						var B = (BeliefState) S ;
-						return B.worldmodel.elements.get(doorId) != null && B.isOpen(doorId) ;
-					} ;
-				}
-				if (MyConfig.targetType.equals("flag")) {
-					String flagId = MyConfig.target ;
-					evo.goalPredicate = S -> {
-						var B = (BeliefState) S ;
-						var flag = (LabEntity) B.worldmodel().elements.get(flagId) ;
-						return flag != null 
-								&& Vec3.distSq(flag.getFloorPosition(), 
-								               B.worldmodel().getFloorPosition()) <= 1f  ;
-					} ;
-				}
-				
-			}
-			
-			evo.runAlgorithm() ;
-			var B = evo.myPopulation.getBest().belief ;
-			DebugUtil.pressEnter() ;
-			return B.getConnections();
+	public Set<Pair<String, String>> exploreLRLogic() throws Exception {
+		
+		BaseSearchAlgorithm algorithm = null ;
+		
+		switch(MyConfig.ALG) {
+		
+		   case "Evo" : 
+			  var evo = new Evolutionary(150,150,agentConstructor) ;
+			  DebugUtil.log("** Using Evolutionary-algorithm") ;
+			  evo.maxPopulationSize = 10 ;
+			  evo.numberOfElitesToKeepDuringSelection = 7 ;
+			  evo.maxChromosomeLength = 8 ;
+			  evo.explorationBudget = 500 ;
+			  algorithm = evo ;
+			  break ;
+			  
+		   case "AOne" :	
+			   DebugUtil.log("** Using Algorithm-One") ;
+			   LabRecruitsTestAgent agent = agentConstructor.apply(null) ;
+			   Thread.sleep(500) ;
+			   algorithm = new AlgorithmOne(agent) ; 
+			   algorithm.runAlgorithm() ;
+			   break ;		   
+			   
+		   case "Random" :	   
+			   DebugUtil.log("** Using the Random-algorithm") ;
+			   agent = agentConstructor.apply(null) ;
+			   Thread.sleep(500) ;
+			   algorithm = new BaseSearchAlgorithm(agent) ;
+			   algorithm.runAlgorithm() ;
+			   break ; 			   
 		}
 		
-		LabRecruitsTestAgent agent = new LabRecruitsTestAgent("agent0") // matches the ID in the CSV file
-				.attachState(new XBelief())
-				.attachEnvironment(environment);
+		if (MyConfig.randomSeed != null) {
+			algorithm.setRndSeed(MyConfig.randomSeed) ;
+		}
 
-		Thread.sleep(500) ;
+		algorithm.setTotalSearchBudget(MyConfig.searchbuget) ;
 
-		try {
-			
-			// Run the exploration algorithm:
-			switch(MyConfig.ALG) {
-			
-			   case "AOne" : 
-				   // using the alg's default budget, which is 180-sec,
-				   // and leaving the goal empty.
-				   DebugUtil.log("** Using Algorithm-One") ;
-				   BaseSearchAlgorithm aOne = new AlgorithmOne(agent) ; 
-				   aOne.runAlgorithm() ;
-				   break ;
-				   
-			   case "Random" : 
-				   // using the alg's default budget, which is 180-sec,
-				   // and leaving the goal empty.
-				   DebugUtil.log("** Using the Random-algorithm") ;
-				   BaseSearchAlgorithm random = new BaseSearchAlgorithm(agent) ;
-				   random.runAlgorithm() ;
-				   break ; 
+		if (MyConfig.target != null) {
+			if (MyConfig.targetType.equals("door")) {
+				String doorId = MyConfig.target ;
+				algorithm.goalPredicate = S -> {
+					var B = (BeliefState) S ;
+					return B.worldmodel.elements.get(doorId) != null && B.isOpen(doorId) ;
+				} ;
+			}
+			if (MyConfig.targetType.equals("flag")) {
+				String flagId = MyConfig.target ;
+				algorithm.goalPredicate = S -> {
+					var B = (BeliefState) S ;
+					var flag = (LabEntity) B.worldmodel().elements.get(flagId) ;
+					return flag != null 
+							&& Vec3.distSq(flag.getFloorPosition(), 
+							               B.worldmodel().getFloorPosition()) <= 1f  ;
+				} ;
 			}
 			
 		}
+		
+		try {
+			algorithm.runAlgorithm() ;
+		}
 		catch(InterruptedException e) {
+			// when the thread is interrupted due to timeout:	
 			DebugUtil.log(">>>> the execution thread was interrupted.") ;
 		}
 		catch(Exception e) {
-			// when the thread crashes of interrupted due to timeout:
+			DebugUtil.log(">>>> something went wrong...") ;
 			e.printStackTrace() ;
 		}
+		
+		algorithm.agent.env().close() ;
 
 		DebugUtil.pressEnter();
-		return ((XBelief) agent.getState()).getConnections();
+		return algorithm.getDiscoveredConnections() ;
 	}
 
 }

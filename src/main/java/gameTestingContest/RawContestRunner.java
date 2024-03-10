@@ -1,5 +1,6 @@
 package gameTestingContest;
 
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -10,6 +11,7 @@ import environments.LabRecruitsEnvironment;
 import environments.SocketReaderWriter;
 import game.LabRecruitsTestServer;
 import game.Platform;
+import leveldefUtil.LRconnectionLogic;
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
@@ -61,10 +63,12 @@ public class RawContestRunner {
                 Platform.PathToLabRecruitsExecutable(labRecruitesExeRootDir));
         labRecruitsBinding.waitForGameToLoad();
     }
-
-    // a help method to create an instance of your MyTestingAI.
-    static Supplier<MyTestingAI> mkAnInstanceOfMyTestingAI = () -> new MyTestingAI();
-
+    
+    // a function used to create an instance of MyTestingAI. By default this
+    // will just call the constructor of MyTestingAI. But through this field
+    // we can change it to something for the purpose of testing this Runner.
+    static Supplier<MyTestingAI> mkAnInstanceOfMyTestingAI = () -> new MyTestingAI() ;
+    
     /**
      * Invoke this main method to run your MyTestingAI on a game-level you specified
      * above.
@@ -72,35 +76,37 @@ public class RawContestRunner {
     public static void main(String[] args) throws Exception {
         // launch an instance of Lab Recruits
         launchLabRcruits();
-        // create an instance of LabRecruitsEnvironment; it will bind to the
-        // Lab Recruits instance you launched above. It will also load the
-        // level specified below:
+        // specify the level file, and where to find it:
         var config = new LabRecruitsConfig(levelName, levelsDir);
-        LabRecruitsEnvironment env = new LabRecruitsEnvironment(config);
-
-        // let's now instantiate your test-algorithm/AI, and run it:
-        MyTestingAI myTestingAI = mkAnInstanceOfMyTestingAI.get();
+        
+        // let's now instantiate your test-algorithm/AI:
+        MyTestingAI myTestingAI = mkAnInstanceOfMyTestingAI.get() ;
         
         var agentId_ = MyConfig.agentId ;
         if (agentId_ == null) agentId_ = "agent0" ;
         final String agentId = agentId_ ;
         
         myTestingAI.agentConstructor = dummy -> {
-        	LabRecruitsEnvironment env2 = new LabRecruitsEnvironment(config);
+        	// create an instance of LabRecruitsEnvironment; it will bind to the
+            // Lab Recruits instance you launched above. It will also load the
+            // level specified in the passed LR-config:
+        	LabRecruitsEnvironment env = new LabRecruitsEnvironment(config);
         	LabRecruitsTestAgent agent = new LabRecruitsTestAgent(agentId) // matches the ID in the CSV file
     				.attachState(new XBelief())
-    				.attachEnvironment(env2);
+    				.attachEnvironment(env);
     		return agent ;
         } ;
 
         
-        Set<Pair<String, String>> report = myTestingAI.exploreLRLogic(env);
+        Set<Pair<String, String>> report = myTestingAI.exploreLRLogic();
         // printing the findings:
         System.out.println("** The level has the following logic:");
         for (Pair<String, String> connection : report) {
             System.out.println("   Button " + connection.fst + " toggles " + connection.snd);
         }
-        env.close() ;
+        String levelfile = Paths.get(levelsDir, levelName + ".csv").toString() ;
+        var referenceLogic = LRconnectionLogic.parseConnections(levelfile) ;
+        System.out.println(LRconnectionLogic.compareConnection(referenceLogic, report)) ;
         labRecruitsBinding.close();
     }
 

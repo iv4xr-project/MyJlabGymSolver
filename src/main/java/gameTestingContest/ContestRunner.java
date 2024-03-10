@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
+import agents.LabRecruitsTestAgent;
+import algorithms.XBelief;
 import environments.LabRecruitsConfig;
 import environments.LabRecruitsEnvironment;
 import environments.SocketReaderWriter;
@@ -95,15 +97,30 @@ public class ContestRunner implements Callable<Integer> {
         
         LabRecruitsTestServer LRbinding = launchLabRecruits() ;
         var config = new LabRecruitsConfig(levelName,levelsDir) ;
-        LabRecruitsEnvironment environment = new LabRecruitsEnvironment(config);
         
         final Thread parentThread = Thread.currentThread() ;
         Thread aiThread = new Thread(() -> { 
             long startTime = System.currentTimeMillis() ;
             printDebugInfo("Starting contestant AI.") ;
             MyTestingAI myTestingAI = mkAnInstanceOfMyTestingAI.get() ;
+            
+            var agentId_ = MyConfig.agentId ;
+            if (agentId_ == null) agentId_ = "agent0" ;
+            final String agentId = agentId_ ;
+            
+            myTestingAI.agentConstructor = dummy -> {
+            	// create an instance of LabRecruitsEnvironment; it will bind to the
+                // Lab Recruits instance you launched above. It will also load the
+                // level specified in the passed LR-config:
+            	LabRecruitsEnvironment env = new LabRecruitsEnvironment(config);
+            	LabRecruitsTestAgent agent = new LabRecruitsTestAgent(agentId) // matches the ID in the CSV file
+        				.attachState(new XBelief())
+        				.attachEnvironment(env);
+        		return agent ;
+            } ;
+            
             try {
-                Set<Pair<String,String>> report = myTestingAI.exploreLRLogic(environment) ;
+                Set<Pair<String,String>> report = myTestingAI.exploreLRLogic() ;
                 long endTime = System.currentTimeMillis() ;
                 long runTime = endTime - startTime ;
                 // write the report to a file:

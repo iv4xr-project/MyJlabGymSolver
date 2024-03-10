@@ -230,4 +230,17 @@ public class XBelief extends BeliefState {
 		   .collect(Collectors.toSet());
 	}
 	
+	public int getNumberOfOpenDoors() {
+		int n = 0 ;
+		for (var e : worldmodel.elements.values()) {
+			var e_ = (LabEntity) e ;
+			if (e_.type.equals(LabEntity.DOOR)) {
+				if (e_.getBooleanProperty("isOpen")) {
+					n++ ;
+				}
+			}
+		}
+		return n ;
+	}
+	
 }

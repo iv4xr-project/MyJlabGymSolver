@@ -14,18 +14,10 @@ import eu.iv4xr.framework.mainConcepts.WorldEntity;
  */
 public class AlgorithmOne extends BaseSearchAlgorithm {
 	
-	public int explorationBudget ;
-	
 	public AlgorithmOne(LabRecruitsTestAgent agent) { 
 		super(agent) ;
-		explorationBudget = this.budget_per_task ;
 	}
-	
-	public AlgorithmOne(LabRecruitsTestAgent agent, int randomSeed) { 
-		super(agent,randomSeed) ;
-		explorationBudget = this.budget_per_task ;
-	}
-	
+
 	/**
 	 * This is the search algorithm of this class. It works as follows:
 	 * 

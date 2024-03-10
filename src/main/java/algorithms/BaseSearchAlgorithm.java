@@ -73,6 +73,19 @@ public class BaseSearchAlgorithm {
 		remainingSearchBudget = totalSearchBudget ;
 	}
 	
+	public Set<Pair<String,String>> getDiscoveredConnections() {
+		return getBelief().getConnections();
+	}
+	
+	/**
+	 * If {@link #goalPredicate} is specified, this checks if it is achieved.
+	 */
+	public boolean isGoalSolved() {
+		if (goalPredicate != null) 
+			return goalPredicate.test(getBelief()) ;
+		return false ;
+	}
+	
 	/**
 	 * If not null, the predicate specified when the search is considered completed.
 	 * The predicate is evaluated on the agent's state. If the predicate is not
@@ -89,39 +102,40 @@ public class BaseSearchAlgorithm {
 	public int budget_per_task = 150 ;
 	
 	/**
+	 * The max. number of turns spent on exploration. 
+	 */
+	public int explorationBudget = 150 ;
+	
+	/**
 	 * To keep track which button the agent toggled last.
 	 */
 	// FRAGILE!
 	WorldEntity lastInteractedButton = null;
 
-    BaseSearchAlgorithm() { 
-    	this.setTotalSearchBudget(180000);
-    }
+	
+
+    BaseSearchAlgorithm() { }
     
     public BaseSearchAlgorithm(LabRecruitsTestAgent agent) { 
     	this.agent = agent ;
-    	this.setTotalSearchBudget(180000);
     	var state = agent.getState() ;
     	if (state == null) 
     		throw new IllegalArgumentException("Expecting an agent that already has a state.") ;
     	if (!(state instanceof XBelief)) 
-    		throw new IllegalArgumentException("Expecting an agent with a state of type " + XBelief.class.getName()) ;
-    	
-    	
+    		throw new IllegalArgumentException("Expecting an agent with a state of type " + XBelief.class.getName()) ;   	
     }
     
-    public BaseSearchAlgorithm(LabRecruitsTestAgent agent, int randomSeed) { 
-    	this(agent) ;
-    	this.agent = agent ;
-    	this.rnd = new Random(randomSeed) ;
-    }
-	
+	public void setRndSeed(int seed) {
+		rnd = new Random(seed) ;
+	}
+  
 	/**
 	 * Just returning the BeliefState of the test agent.
 	 */
 	XBelief getBelief() {
 		return (XBelief) agent.getState() ;
 	}
+	
 	
 	/**
 	 * Register all buttons and doors currently in the agent's belief to the models
@@ -364,7 +378,7 @@ public class BaseSearchAlgorithm {
 		long t0 = System.currentTimeMillis() ;
 		int p = 0 ;
 		while (! terminationConditionIsReached()) {
-			doExplore(budget_per_task) ;
+			doExplore(explorationBudget) ;
 			var buttons = getBelief().knownButtons() ;
 			var doors = getBelief().knownDoors() ;
 			if(buttons.isEmpty()  || doors.isEmpty()) {

@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 import agents.LabRecruitsTestAgent;
 import nl.uu.cs.aplib.agents.State;
+import nl.uu.cs.aplib.utils.Pair;
 
 /**
  * Implementation of Monte Carlo Search Tree (MCTS). In this implementation we
@@ -135,9 +136,6 @@ public class MCTS extends BaseSearchAlgorithm {
 	 * found. Default is true.
 	 */
 	boolean searchMode = true ;
-	
-	public int explorationBudget = 500 ;
-	
 	
 	List<String> winningplay = null ;
 	
@@ -360,6 +358,42 @@ public class MCTS extends BaseSearchAlgorithm {
 		evaluateLeaf(leaf.children.get(0)) ;
 	}
 	
+	
+	@Override
+	public void runAlgorithm() throws Exception {
+		long time = System.currentTimeMillis() ;
+		/*
+		createInitialPopulation() ;
+		myPopulation.print(); 
+		while (! evoTerminationConditionIsReached()) {
+			evolve() ;
+			System.out.println(">>> EVOLUTION gen:" + generationNr) ;
+		}
+		time = System.currentTimeMillis() - time ;
+		System.out.println("** EVO") ;
+		System.out.println("** total-runtime=" + time + ", #turns=" + this.turn) ;
+		System.out.println("** Total budget=" + this.totalSearchBudget
+				+ ", unused=" + Math.max(0,this.remainingSearchBudget)) ;
+		printStatus() ;
+		*/
+	}
+	
+	@Override
+	public Set<Pair<String,String>> getDiscoveredConnections() {
+		//var B = myPopulation.getBest().belief ;
+		//return B.getConnections();
+		// todo
+		return null ;
+	}
+	
+	@Override
+	public boolean isGoalSolved() {
+		//if (goalPredicate != null) 
+		//	return goalPredicate.test(myPopulation.getBest().belief) ;
+		//return false ;
+		// todo
+		return false ;
+	}
 	
 
 }

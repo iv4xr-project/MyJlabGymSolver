@@ -24,8 +24,6 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 */
 	public boolean onlyExtendWithNewGene = true ;
 	
-	public int explorationBudget = 500 ;
-	
 	public int maxPopulationSize = 30 ;
 	
 	public int numberOfElitesToKeepDuringSelection = 10 ;
@@ -137,8 +135,9 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				
 	}
 	
+	@Override
 	public void setRndSeed(int seed) {
-		rnd = new Random(seed) ;
+		super.setRndSeed(seed);
 		myPopulation.rnd = rnd ;
 	}
 	
@@ -239,7 +238,8 @@ public class Evolutionary extends BaseSearchAlgorithm {
 					&& mutationProbability < r
 					&& r <= mutationProbability + insertionProbability) {
 				var tau = extend(sigma) ;
-				newBatch.add(tau) ;
+				if (tau != null && ! myPopulation.memberOf(tau))
+				    newBatch.add(tau) ;
 			}
 		}
 		// create cross-overs
@@ -251,7 +251,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				var sigma1 = parents.remove(rnd.nextInt(parents.size())) ;
 				var sigma2 = parents.remove(rnd.nextInt(parents.size())) ;
 				var tau = crossOver(sigma1,sigma2) ;
-				if (tau != null)
+				if (tau != null && ! myPopulation.memberOf(tau))
 				   newBatch.add(tau) ;
 			}
 		}
@@ -417,7 +417,12 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			//for (var D : S.knownDoors()) {
 			//	if (S.isOpen(D.id)) value++ ;
 			//}
-			fitness = S.getConnections().size() ;
+			
+			
+			
+			// let's use the number of discovered connections + the number of
+			// open doors as fitness val:
+			fitness = S.getConnections().size() + S.getNumberOfOpenDoors() ;
 		}
 		System.out.println(">>> chromosome: " 
 		   + chromosome
@@ -468,7 +473,26 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		System.out.println("** total-runtime=" + time + ", #turns=" + this.turn) ;
 		System.out.println("** Total budget=" + this.totalSearchBudget
 				+ ", unused=" + Math.max(0,this.remainingSearchBudget)) ;
+		System.out.print("** Search-goal: ") ;
+		if (goalPredicate == null) {
+			System.out.println(" none specified") ;
+		}
+		else {
+			System.out.println(isGoalSolved() ? "ACHIEVED" : "NOT-achieved") ;
+		}
 		printStatus() ;
 	}
 	
+	@Override
+	public Set<Pair<String,String>> getDiscoveredConnections() {
+		var B = myPopulation.getBest().belief ;
+		return B.getConnections();
+	}
+	
+	@Override
+	public boolean isGoalSolved() {
+		if (goalPredicate != null) 
+			return goalPredicate.test(myPopulation.getBest().belief) ;
+		return false ;
+	}
 }

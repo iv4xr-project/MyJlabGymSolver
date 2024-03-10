@@ -22,10 +22,18 @@ public class ContestRunnerTest {
     // "moveToButton"; but this will do for testing.
     // We will use the guide-method provided by Example1.
     static class XXXtestAI extends MyTestingAI {
+    	
+    	LabRecruitsEnvironment environment ;
         
         // a mock-AI, just for testing.
         @Override
-        public Set<Pair<String, String>> exploreLRLogic(LabRecruitsEnvironment environment) throws Exception {
+        public Set<Pair<String, String>> exploreLRLogic() throws Exception {
+        	
+        	if (environment == null) {
+        		var agent = this.agentConstructor.apply(null) ;
+        		environment = agent.env() ;
+        	}
+        	
             int i = 0 ;
             i = Example1.guide(environment,i,new Vec3(1.5f,0,4f)) ;
             i = Example1.guide(environment,i,new Vec3(5,0,4f)) ;
@@ -41,9 +49,17 @@ public class ContestRunnerTest {
     // As XXXtestAI but we add 30-sec sleep to test breaking of the execution:
     static class XXXtestAI_WithSleep extends MyTestingAI {
         
+    	LabRecruitsEnvironment environment ;
+        
         // a mock-AI, just for testing.
         @Override
-        public Set<Pair<String, String>> exploreLRLogic(LabRecruitsEnvironment environment) throws Exception {
+        public Set<Pair<String, String>> exploreLRLogic() throws Exception {
+        	
+        	if (environment == null) {
+        		var agent = this.agentConstructor.apply(null) ;
+        		environment = agent.env() ;
+        	}
+        	
             int i = 0 ;
             i = Example1.guide(environment,i,new Vec3(1.5f,0,4f)) ;
             i = Example1.guide(environment,i,new Vec3(5,0,4f)) ;
@@ -63,10 +79,18 @@ public class ContestRunnerTest {
     
     // A variation of XXXtestAI_WithSleep: will sleep 30s but then ignores thread-interrupt
     static class XXXtestAI_WithSleep_IgnoringInterrupt extends MyTestingAI {
+    	
+    	LabRecruitsEnvironment environment ;
         
         // a mock-AI, just for testing.
         @Override
-        public Set<Pair<String, String>> exploreLRLogic(LabRecruitsEnvironment environment) throws Exception {
+        public Set<Pair<String, String>> exploreLRLogic() throws Exception {
+        	
+        	if (environment == null) {
+        		var agent = this.agentConstructor.apply(null) ;
+        		environment = agent.env() ;
+        	}
+        	
             int i = 0 ;
             i = Example1.guide(environment,i,new Vec3(1.5f,0,4f)) ;
             i = Example1.guide(environment,i,new Vec3(5,0,4f)) ;
