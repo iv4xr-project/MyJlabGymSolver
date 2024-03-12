@@ -25,7 +25,7 @@ public class QAlg extends BaseSearchAlgorithm {
 	
 	public int maxdepth = 8 ;
 	
-	public float exploreProbability = 0.1f ;
+	public float exploreProbability = 0.2f ;
 	
 	public float maxReward = 10000 ;
 	
@@ -45,8 +45,6 @@ public class QAlg extends BaseSearchAlgorithm {
 	
 	List<String> trace = new LinkedList<>() ;
 	String compressedTrace = "" ;
-	
-	int currentStateDepth ;
 	
 	Function <Void,LabRecruitsTestAgent> agentConstructor ;
 	
@@ -106,13 +104,14 @@ public class QAlg extends BaseSearchAlgorithm {
 		instantiateAgent() ;
 		
 		clearTrace() ;
-		currentStateDepth = 0 ;
 		
 		float totalEpisodeReward = 0 ;
 		
-		while (currentStateDepth < maxdepth && winningplay == null) {
+		while (trace.size() < maxdepth && winningplay == null) {
+			System.out.println(">>> TRACE: " + compressedTrace) ;
 			Integer visited = visitCount.get(compressedTrace) ;
 			if (visited == null) {
+				// System.out.println(">>> state not yet visited: " + compressedTrace) ;
 				// reset exploration, then do full explore:
 				 getBelief().pathfinder().wipeOutMemory();
 				 doExplore(explorationBudget) ;
@@ -132,6 +131,7 @@ public class QAlg extends BaseSearchAlgorithm {
 			
 			var candidateActions = qtable.get(compressedTrace) ;
 			
+			
 			if (candidateActions.isEmpty()) 
 				// no further actions is possible, so we stop the episode
 				break ;
@@ -143,16 +143,28 @@ public class QAlg extends BaseSearchAlgorithm {
 				chosenAction = actions.get(rnd.nextInt(actions.size())) ;
 			}
 			else {
-				float bestVal = Float.MIN_VALUE ;
+				float bestVal = Float.NEGATIVE_INFINITY ;
+				//System.out.println(">>> cadidates : " + candidateActions.size()) ;
+				
 				for (var a : candidateActions.entrySet()) {
+					//System.out.println(">>> " + a.getKey()  + ", " + a.getValue().maxReward) ;
 					if (a.getValue().maxReward > bestVal) {
 						bestVal = a.getValue().maxReward ;
-						chosenAction = a.getKey() ;
 					}
 				}
+				// get the actions with the best value (we could have multiple)
+				final float bestVal_ = bestVal ;
+				var bestCandidates = candidateActions.entrySet()
+						.stream()
+						.filter(e -> e.getValue().maxReward >= bestVal_)
+						.toList() ;
+				
+				chosenAction = bestCandidates.get(rnd.nextInt(bestCandidates.size())).getKey() ;
 			}
 			var button = chosenAction ;
 			var info = candidateActions.get(chosenAction) ;
+		    System.out.println(">>> chosen-action : " + chosenAction + ", info:" + info.maxReward) ;
+			
 			// now, execute the action:
 			var status = solveGoal("Toggling button " + button, entityInteracted(button), budget_per_task) ;
 			 // if the agent is dead, break:
@@ -226,6 +238,7 @@ public class QAlg extends BaseSearchAlgorithm {
 		float totEpisodeAward = 0 ;
 		while (! terminationConditionIsReached()) {
 			long time2 =  System.currentTimeMillis() ;
+			System.out.println(">>> episode : " + numOfEpisodes) ;
 			var episodeAward = playEpisode() ;
 			var cons = getBelief().getConnections() ;
 			for (var c : cons) {
@@ -236,6 +249,7 @@ public class QAlg extends BaseSearchAlgorithm {
 			long duration = System.currentTimeMillis() - time2 ;
 			remainingSearchBudget = remainingSearchBudget - (int) duration ;
 		}
+		time =  System.currentTimeMillis() - time ;
 		System.out.println("** Q-learning") ;
 		System.out.println("** total-runtime=" + time + ", #turns=" + this.turn) ;
 		System.out.println("** Total budget=" + this.totalSearchBudget

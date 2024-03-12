@@ -9,12 +9,13 @@ public class MyConfig {
 	//static public String ALG = "AOne" ;
 	//static public String ALG = "Random" ;
 	// static public String ALG = "Evo" ;
-	static public String ALG = "MCTS" ;
+	//static public String ALG = "MCTS" ;
+	static public String ALG = "Q" ;
 	
 	//static public String target = null ;
 
-	static public String target = "door3" ;
-	//static public String target = "door5" ;
+	//static public String target = "door3" ;
+	static public String target = "door5" ;
 	
 	static public String targetType = "door" ; // "door" or "flag"
 	
