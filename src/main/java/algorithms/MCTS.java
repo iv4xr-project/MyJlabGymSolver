@@ -202,13 +202,15 @@ public class MCTS extends BaseSearchAlgorithm {
 			 }
 			 
 			 // reset exploration, then do full explore:
-			 agent.getState().pathfinder().wipeOutMemory();
+			 getBelief().pathfinder().wipeOutMemory();
 			 doExplore(explorationBudget) ;
 		}
+		
 		var cons = getBelief().getConnections() ;
-		if (cons.size() > discoveredConnections.size()) {
-			discoveredConnections = cons ;
+		for (var c : cons) {
+			discoveredConnections.add(c) ;
 		}
+		
 		if (closeEnvAtTheEnd)
 			closeEnv() ;
 		return success ;
@@ -260,19 +262,18 @@ public class MCTS extends BaseSearchAlgorithm {
 			var status = solveGoal("Toggling button " + chosen.id, entityInteracted(chosen.id), budget_per_task) ;
 			depth++ ;
 			// if the agent is dead, break:
-			 if (agent.getState().worldmodel().health <= 0)
+			 if (getBelief().worldmodel().health <= 0)
 				 break ;
 			 // also break the execution if a button fails:
 			 if (!status.success()) 
 				 break ;
 			 
 			 // reset exploration, then do full explore:
-			 agent.getState().pathfinder().wipeOutMemory();
+			 getBelief().pathfinder().wipeOutMemory();
 			 doExplore(explorationBudget) ;
 			 
 			 // check if the goal-predicate if we have one, is solved:
-			 S = getBelief() ;
-			 if (goalPredicate != null && goalPredicate.test(S)) {
+			 if (goalPredicate != null && goalPredicate.test(getBelief())) {
 				// the search-goal is solved
 				 //goalPredicateSolved = true ;
 				 break ;
@@ -281,8 +282,8 @@ public class MCTS extends BaseSearchAlgorithm {
 		}
 		
 		var cons = getBelief().getConnections() ;
-		if (cons.size() > discoveredConnections.size()) {
-			discoveredConnections = cons ;
+		for (var c : cons) {
+			discoveredConnections.add(c) ;
 		}
 		
 		PlayResult R = new PlayResult() ;
@@ -398,7 +399,7 @@ public class MCTS extends BaseSearchAlgorithm {
 	boolean terminationConditionIsReached() {
 		if (remainingSearchBudget <= 0) {
 			DebugUtil.log("*** TOTAL BUDGET IS EXHAUSTED.") ;
-			System.out.println("*** TOTAL BUDGET IS EXHAUSTED.") ;
+			//System.out.println("*** TOTAL BUDGET IS EXHAUSTED.") ;
 			return true ;
 		}
 		if (isGoalSolved()) {
@@ -407,7 +408,7 @@ public class MCTS extends BaseSearchAlgorithm {
 		}
 		if (mctree.fullyExplored) {
 			DebugUtil.log("*** The search tree is fully explored.") ;
-			System.out.println("*** The search tree is fully explored.") ;
+			//System.out.println("*** The search tree is fully explored.") ;
 			return true ;
 		}
 		return false ;

@@ -10,6 +10,7 @@ import algorithms.BaseSearchAlgorithm;
 import algorithms.DebugUtil;
 import algorithms.Evolutionary;
 import algorithms.MCTS;
+import algorithms.QAlg;
 import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.utils.Pair;
 import world.BeliefState;
@@ -100,6 +101,13 @@ public class MyTestingAI {
 			   mcts.maxdepth = MyConfig.solutionLengthUpperBound  ;
 			   algorithm = mcts ;
 			   break ;
+			   
+		   case "Q" :
+			   var Q = new QAlg(agentConstructor) ;
+			   DebugUtil.log("** Using Q-learning") ;
+			   Q.maxdepth = MyConfig.solutionLengthUpperBound  ;
+			   algorithm = Q ;
+			   break ;	   
 				  
 		   case "AOne" :	
 			   DebugUtil.log("** Using Algorithm-One") ;

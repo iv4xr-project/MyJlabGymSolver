@@ -21,6 +21,7 @@ public class MyConfig {
 	//static public String agentId = null ;
 
 	static public String agentId = "agent1" ;
+	//static public String agentId = "agent0" ;
 	
 	/**
 	 * Total search budget in ms.
@@ -32,7 +33,7 @@ public class MyConfig {
 	 * A number K such that there exists a sequence of button-interactions of
 	 * length at most K, that solve the goal, if a goal is given.
 	 */
-	static public int solutionLengthUpperBound = 4 ;
+	static public int solutionLengthUpperBound = 5 ;
 	
 	/**
 	 * Budget for doing a single "task", typically for finding and toggling a button.

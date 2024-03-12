@@ -36,6 +36,8 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	List<String> knownButtons = new LinkedList<>() ;
 	
+	public Set<Pair<String,String>> discoveredConnections = new HashSet<>() ;
+	
 	public Population myPopulation = new Population() ;
 	
 	Function <Void,LabRecruitsTestAgent> agentConstructor ;
@@ -427,6 +429,12 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				knownButtons.add(B.id) ;
 			}
 		}
+		// add discovered connections:
+		var cons = getBelief().getConnections() ;
+		for (var c : cons) {
+			discoveredConnections.add(c) ;
+		}
+		
 		closeEnv() ;
 		// override the calculation of remaining budget:
 		return new ChromosomeInfo(chromosome,fitness,S) ;
@@ -486,8 +494,9 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	@Override
 	public Set<Pair<String,String>> getDiscoveredConnections() {
-		var B = myPopulation.getBest().belief ;
-		return B.getConnections();
+		//var B = myPopulation.getBest().belief ;
+		//return B.getConnections();
+		return discoveredConnections ;
 	}
 	
 	@Override
