@@ -235,8 +235,15 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		// new batch.
 		List<List<String>> newBatch = new LinkedList<>() ;
 		while (parents.size() > 1) {
-			var p1 = parents.get(rnd.nextInt(parents.size()-1)) ;
-			var p2 = parents.get(rnd.nextInt(parents.size()-1)) ;
+			var p1 = parents.remove(rnd.nextInt(parents.size()-1)) ;
+			List<String> p2 = null ;
+			if (parents.size() == 1) {
+				p2 = parents.remove(0) ;
+			}
+			else {
+				p2 = parents.remove(rnd.nextInt(parents.size()-1)) ;
+			}
+		
 			boolean putBackParents = true ;
 			if (rnd.nextFloat() <= crossoverProbability) {
 				var offsprings = crossOver(p1,p2) ;
@@ -292,7 +299,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			}
 			var info = fitnessValue(tau) ;
 			myPopulation.add(info);
-			if (info.fitness >= maxFitness) 
+			if (isGoalSolved()) 
 				// found a solution!
 				break ;
 		}
@@ -442,7 +449,8 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		var S = getBelief() ;
 		float fitness = 0 ;
 		
-		if (goalPredicateSolved) {
+		// don't replace this with isGoalSolved():
+		if (goalPredicate != null && goalPredicate.test(S)) {
 			fitness = maxFitness ;	
 		}
 		else {
@@ -523,7 +531,6 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		printStatus() ;
 	    if (knownButtons.isEmpty())
 	    	throw new IllegalArgumentException("The algorithm cannot find any action to activate.") ;
-		myPopulation.print(); 
 		this.remainingSearchBudget = this.remainingSearchBudget - (int) (System.currentTimeMillis()  - time) ;
 		while (! terminationConditionIsReached()) {
 			long t0 = System.currentTimeMillis() ;
@@ -557,7 +564,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	@Override
 	public boolean isGoalSolved() {
-		if (goalPredicate != null) 
+		if (goalPredicate != null && !myPopulation.population.isEmpty()) 
 			return goalPredicate.test(myPopulation.getBest().belief) ;
 		return false ;
 	}
