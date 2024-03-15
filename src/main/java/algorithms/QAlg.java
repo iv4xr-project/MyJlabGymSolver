@@ -91,12 +91,12 @@ public class QAlg extends BaseSearchAlgorithm {
 		compressedTrace = "" ;
 	}
 	
-	float rewardOfCurrentGameState() {
+	float valueOfCurrentGameState() {
 		var S = this.getBelief() ;
 		if (goalPredicate != null && goalPredicate.test(S)) {
 			return maxReward ;
 		}
-		return S.getConnections().size() + S.getNumberOfOpenDoors() ;
+		return 3*S.getConnections().size() + S.getNumberOfOpenDoors() ;
 	}
 	
 	float playEpisode() throws Exception {
@@ -164,8 +164,8 @@ public class QAlg extends BaseSearchAlgorithm {
 			var button = chosenAction ;
 			var info = candidateActions.get(chosenAction) ;
 		    System.out.println(">>> chosen-action : " + chosenAction + ", info:" + info.maxReward) ;
-			
-			// now, execute the action:
+		    // now, execute the action:
+		    var value0 = valueOfCurrentGameState() ;
 			var status = solveGoal("Toggling button " + button, entityInteracted(button), budget_per_task) ;
 			 // if the agent is dead, break:
 			 if (agent.getState().worldmodel().health <= 0) {
@@ -184,18 +184,20 @@ public class QAlg extends BaseSearchAlgorithm {
 			 // we are now at the "next state" T reached after executing the chosen action,
 			 // and exploration is done to evaluate the reward of that state.
 			 var T = getBelief() ;
-			 
-			 var reward = rewardOfCurrentGameState() ;
+			 var value1 = valueOfCurrentGameState() ;
+			 // define rewad as the diff between the value of the new and previous states:
+			 var reward = value1 - value0 ;
 			 totalEpisodeReward += reward ;
 
 			 
-			 if (reward >= maxReward) {
+			 if (value1 >= maxReward) {
 				 // goal state is reached
 				 if (singleSearchMode) {
 					 winningplay = new LinkedList<String>() ;
 					 winningplay.addAll(trace) ; 
 				 }
-				 info.maxReward = reward ;
+				 totalEpisodeReward = value1 ;
+				 info.maxReward = totalEpisodeReward ;
 				 return totalEpisodeReward ;	 
 			 }
 			 // else :

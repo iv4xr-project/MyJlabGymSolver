@@ -16,7 +16,8 @@ import world.LabEntity;
 public class Evolutionary extends BaseSearchAlgorithm {
 
 	public float mutationProbability  = 0.2f ;
-	public float insertionProbability = 0.2f ;
+	public float insertionProbability = 0.3f ;
+	public float crossoverProbability = 0.2f ;
 	
 	/**
 	 * When true, then the extend-operation insets a gene that is not already in
@@ -24,7 +25,10 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 */
 	public boolean onlyExtendWithNewGene = true ;
 	
-	public int maxPopulationSize = 30 ;
+	/**
+	 * Should be at least four.
+	 */
+	public int maxPopulationSize = 20 ;
 	
 	public int numberOfElitesToKeepDuringSelection = 10 ;
 	
@@ -97,20 +101,44 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			return population.get(0) ;
 		}
 		
+		/**
+		 * Get the Chromosome-info of the given chromosome, if it is in the population. Else
+		 * return null.
+		 */
+		public ChromosomeInfo getInfo(List<String> chromosome) {
+			for (var CI : population) {
+				if (CI.chromosome.equals(chromosome)) {
+					return CI ;
+				}
+			}
+			return null ;
+		}
+		
 		boolean memberOf(List<String> tau) {
 			return population.stream().anyMatch(CI -> tau.equals(CI.chromosome)) ;
 		}
 		
+		void remove(List<String> tau) {
+			int k = 0 ;
+			for (var CI : population) {
+				if (CI.chromosome.equals(tau)) {
+					break ;
+				}
+				k++ ;
+			}
+			if (k < population.size())
+				population.remove(k) ;
+		}
+		
 		/**
 		 * Shrink the population to the given target size, keeping the specified
-		 * number of the best genes.
-		 * @param targetSize
-		 * @param numberOfElitesToKeep
+		 * number of the best chromosomes (elitism). The remaining space is filled
+		 * by randomly selecting from those outside the elite set.
 		 */
 		void applySelection(int targetSize, int numberOfElitesToKeep) {
-			if (numberOfElitesToKeep >= targetSize) 
+			if (numberOfElitesToKeep > targetSize) 
 				throw new IllegalArgumentException() ;
-				
+	
 			int numberToDrop = population.size() - targetSize ;
 			
 			while (numberToDrop > 0) {
@@ -150,10 +178,12 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		myPopulation.print(); 
 	}
 	
+	/**
+	 * For creating the initially population of chromosomes. The agent will first explore the game,
+	 * to find buttons. Chromosomes of length 1 are then created. Each containing an interaction
+	 * with a button.
+	 */
 	void createInitialPopulation() throws Exception {
-		
-		int remainingBudget = this.remainingSearchBudget ;
-		long t0 = System.currentTimeMillis() ;
 		
 		if (maxPopulationSize <= 0)
 			throw new IllegalArgumentException() ;
@@ -177,84 +207,89 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			throw new Exception("Cannot create a starting population because the agent cannot find any button.") ;
 		}
 		
+		List<String> buttons = new LinkedList<>() ;
+		buttons.addAll(knownButtons) ;
 		
-		if (knownButtons.size() == 1)  {
-			List<String> tau = new LinkedList<>() ;
-			tau.add(knownButtons.get(0)) ;
+		while(buttons.size() > 0 && myPopulation.population.size() < maxPopulationSize) {
+			var B = buttons.remove(rnd.nextInt(buttons.size())) ;
+			List<String> tau = new LinkedList<>() ; 
+			tau.add(B) ;
 			myPopulation.add(fitnessValue(tau));
+			if (isGoalSolved()) break ;	
 		}
-		else if (knownButtons.size() == 2 && maxChromosomeLength >= 2)  {
-			List<String> tau = new LinkedList<>() ;
-			tau.add(knownButtons.get(0)) ;
-			tau.add(knownButtons.get(1)) ;
-			myPopulation.add(fitnessValue(tau));
-			if (maxPopulationSize > 1) {
-				tau.add(knownButtons.get(1)) ;
-				tau.add(knownButtons.get(0)) ;
-				myPopulation.add(fitnessValue(tau));	
-			}
-		}
-		else {
-		   // other cases:		
-		   for (int k = 0; k < maxPopulationSize; k++) {
-			   List<String> tau = new LinkedList<>();
-			   int maxNumberOfAttempts = 50;
-			   for (int a = 0; a < maxNumberOfAttempts; a++) {
-				   for (int i = 0; i < maxChromosomeLength; i++) {
-					   var B = knownButtons.get(rnd.nextInt(knownButtons.size()));
-					   tau.add(B);
-				   }
-				   if (!myPopulation.memberOf(tau))
-					   break;
-			   }
-			   if (tau.isEmpty())
-				   break;
-		   myPopulation.add(fitnessValue(tau)); 
-		   }
-		}
-		generationNr++ ;
-		printStatus() ;
-		// override the calculation of remaining budget:
-		long time = System.currentTimeMillis() - t0 ;
-		this.remainingSearchBudget = remainingBudget - (int) time ;
+		
+		generationNr = 1  ;
 	}
 	
 	void evolve() throws Exception {
-		long t0 = System.currentTimeMillis() ;
-		// create mutation/extension:
+			
+		int halfSize = maxPopulationSize/2 ;
+		// Apply selection, drop some chromosones to get the population to maxSize/2.
+		// If the current population size is less that maxSize/2, then none is dropped. 
+		// The obtained selection is called "parents".
+		myPopulation.applySelection(halfSize, numberOfElitesToKeepDuringSelection);
+		List<List<String>> parents = new LinkedList<>() ;
+		parents.addAll(myPopulation.population.stream().map(CI -> CI.chromosome).collect(Collectors.toList())) ;
+		
+		// Create a new-batch by either applying crossover or by just putting parents in the
+		// new batch.
 		List<List<String>> newBatch = new LinkedList<>() ;
-		for (var CI : myPopulation.population) {
-			var sigma = CI.chromosome ;
+		while (parents.size() > 1) {
+			var p1 = parents.get(rnd.nextInt(parents.size()-1)) ;
+			var p2 = parents.get(rnd.nextInt(parents.size()-1)) ;
+			boolean putBackParents = true ;
+			if (rnd.nextFloat() <= crossoverProbability) {
+				var offsprings = crossOver(p1,p2) ;
+				if (offsprings != null 
+						&& ! newBatch.contains(offsprings.fst)
+						&& ! newBatch.contains(offsprings.snd)) {
+					newBatch.add(offsprings.fst) ;
+					newBatch.add(offsprings.snd) ;
+					putBackParents = false ;
+				}
+			}
+			if (putBackParents) {
+				newBatch.add(p1) ;
+				newBatch.add(p2) ;
+ 			}	
+		}
+		if (parents.size() == 1) {
+			// a single parent remains, just put it back:
+			newBatch.add(parents.remove(0)) ;
+		}
+		
+		// fill in the rest of the new-batch with mutated or extended chromosomes:
+		
+		int N = newBatch.size() ;
+		
+		for (int i=0; i<N; i++) {
+			var sigma = newBatch.get(i) ;
 			// mutate or extend:
-			float r = rnd.nextFloat() ;
-			if (r <= mutationProbability) {
+			boolean extensionIsApplied = false ;
+			if (sigma.size() < maxChromosomeLength && rnd.nextFloat() <= insertionProbability) {
+				var tau = extend(sigma) ;
+				if (tau != null && ! myPopulation.memberOf(tau)) {
+				    newBatch.add(tau) ;
+				    extensionIsApplied = true ;
+				}
+			}
+			if (!extensionIsApplied && rnd.nextFloat() <= mutationProbability) {
 				var tau = mutate(sigma) ;
 				if (tau!= null && ! myPopulation.memberOf(tau))
 					newBatch.add(tau) ;
 			}
-			else if (sigma.size() < maxChromosomeLength 
-					&& mutationProbability < r
-					&& r <= mutationProbability + insertionProbability) {
-				var tau = extend(sigma) ;
-				if (tau != null && ! myPopulation.memberOf(tau))
-				    newBatch.add(tau) ;
-			}
-		}
-		// create cross-overs
-		if (myPopulation.population.size() >= 2) {
-			int half = myPopulation.population.size() / 2 ;
-			List<List<String>> parents = new LinkedList<>() ;
-			parents.addAll(myPopulation.population.stream().map(CI -> CI.chromosome).toList()) ;
-			for (int k=0; k<half; k++) {
-				var sigma1 = parents.remove(rnd.nextInt(parents.size())) ;
-				var sigma2 = parents.remove(rnd.nextInt(parents.size())) ;
-				var tau = crossOver(sigma1,sigma2) ;
-				if (tau != null && ! myPopulation.memberOf(tau))
-				   newBatch.add(tau) ;
-			}
 		}
 		
+		// clear the population; keeping only those that also appear in the new batch
+		myPopulation.population.removeIf(CI -> ! newBatch.contains(CI.chromosome)) ;
+		
+		// now calculate the fitness of every member of the new-batch, and add it to the
+		// population:
 		for (var tau : newBatch) {
+			if (myPopulation.memberOf(tau)) {
+				// already in the population, no need to evaluate its fitness again
+				continue ;
+			}
 			var info = fitnessValue(tau) ;
 			myPopulation.add(info);
 			if (info.fitness >= maxFitness) 
@@ -262,13 +297,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				break ;
 		}
 		
-		myPopulation.applySelection(maxPopulationSize, numberOfElitesToKeepDuringSelection);
 		generationNr++ ;
-		printStatus() ;
-		// override the calculation of remaining budget:
-		long time = System.currentTimeMillis() - t0 ;
-		this.remainingSearchBudget = this.remainingSearchBudget - (int) time ;
-
 	}
 	
 	
@@ -278,8 +307,9 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		return S ;
 	}
 	/**
-	 * Return a new chromosome, obtained by randomly mutating a location in 
+	 * Return a new chromosome, obtained by randomly mutating one location in 
 	 * the given chromosome.
+	 * It returns null, if the method fails to mutate.
 	 */
 	List<String> mutate(List<String> chromosome) {
 		
@@ -295,57 +325,66 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		return S ;
 	}
 	
+	/**
+	 * Insert a new gene into a chromosome. The method fails if no gene to insert can be found.
+	 */
 	List<String> extend(List<String> chromosome) {
 		
-		var S = copy(chromosome) ;
+		var seq = copy(chromosome) ;
 		
-		int insertionPoint = rnd.nextInt(S.size()) ;
+		int insertionPoint = rnd.nextInt(seq.size()) ;
 		// insert a toggle that is not already in the chromosome:
 		List<String> candidates = knownButtons ;
 				
 		if (onlyExtendWithNewGene) 
 			candidates = knownButtons.stream()
-				.filter(A -> ! S.contains(A))
+				.filter(A -> ! seq.contains(A))
 				.toList() ;
 		
 		if (candidates.isEmpty()) return null ;
 		
 		String E =  candidates.get(rnd.nextInt(candidates.size())) ;
 		
-		S.add(insertionPoint,E) ;
-		return S ;	
+		seq.add(insertionPoint,E) ;
+		return seq ;	
 	}
 	
-	List<String> crossOver(List<String> chromosome1, List<String> chromosome2) {
+	/**
+	 * Create two offsprings of the given chromosomes through cross-over.
+	 */
+	Pair<List<String>,List<String>> crossOver(List<String> chromosome1, List<String> chromosome2) {
+		
 		if (chromosome1.isEmpty() || chromosome2.isEmpty())
 			return null ;
 		
-		List<String> shorter = chromosome1 ;
-		List<String> longer  = chromosome2 ;
-		if (shorter.size() > longer.size()) {
-			shorter = chromosome2 ;
-			longer = chromosome1 ;
+		List<String> shorter = new LinkedList<>() ;
+		List<String> longer  = new LinkedList<>() ;
+		if (chromosome1.size() >= chromosome2.size()) {
+			longer.addAll(chromosome1) ;
+			shorter.addAll(chromosome2) ;
+		}
+		else {
+			longer.addAll(chromosome2) ;
+			shorter.addAll(chromosome1) ;
 		}
 		if (shorter.size() == 1) {
-			var S = copy(shorter) ;
-			S.addAll(longer) ;
-			return S ;
+			shorter.addAll(longer.subList(1, longer.size())) ;
+			return new Pair<>(shorter,longer) ;
 		}
 		
 		int crossPoint = shorter.size()/2 ;
 		
-		var S = new LinkedList<String>() ;
-		int k = 0 ;
-		while (k<crossPoint) {
-			S.add(shorter.get(k)) ;
-			k++ ;
-		}
-		while (k < longer.size()) {
-			S.add(longer.get(k)) ;
-			k++ ;
-		}
-		return S ;
-	}
+		var S1 = new LinkedList<String>() ;
+		var S2 = new LinkedList<String>() ;
+		
+		S1.addAll(shorter.subList(0, crossPoint)) ;
+		S1.addAll(longer.subList(crossPoint, longer.size())) ;
+		
+		S2.addAll(longer.subList(0, crossPoint)) ;
+		S2.addAll(shorter.subList(crossPoint, shorter.size())) ;
+		
+		return new Pair<>(S1,S2) ;
+ 	}
 	
 	
 	void instantiateAgent() throws InterruptedException {
@@ -371,13 +410,18 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		System.out.println(">>> evaluating chromosome: " + chromosome);
 		
 		boolean goalPredicateSolved = false ;
+		boolean agentIsAlive = true ;
 		
 		int k = 0 ;
 		for (var button : chromosome) {
 			 var status = solveGoal("Toggling button " + button, entityInteracted(button), budget_per_task) ;
+			 // this is the right place for k++, don't move it:
+			 k++ ;
 			 // if the agent is dead, break:
-			 if (agent.getState().worldmodel().health <= 0)
+			 if (agent.getState().worldmodel().health <= 0) {
+				 agentIsAlive = false ;
 				 break ;
+			 }
 			 // also break the execution if a button fails:
 			 if (!status.success()) 
 				 break ;
@@ -393,32 +437,32 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				 goalPredicateSolved = true ;
 				 break ;
 			}
-			k++ ;
 		}
 				
 		var S = getBelief() ;
 		float fitness = 0 ;
 		
 		if (goalPredicateSolved) {
-			fitness = maxFitness ;
-			// drop the trailing part of the chromosome:
-			int tobeRemoved = chromosome.size() - k - 1 ;
-			while (tobeRemoved > 0) {
-				chromosome.remove(chromosome.size()-1) ;
-				tobeRemoved -- ;
-			}
+			fitness = maxFitness ;	
 		}
 		else {
 			//System.out.println(">>> #DOORS=" + S.knownDoors().size()) ;
 			//for (var D : S.knownDoors()) {
 			//	if (S.isOpen(D.id)) value++ ;
-			//}
-			
-			
-			
+			//}	
 			// let's use the number of discovered connections + the number of
 			// open doors as fitness val:
 			fitness = S.getConnections().size() + S.getNumberOfOpenDoors() ;
+			// except when the agent dies:
+			if (! agentIsAlive)
+				fitness = -1 ;
+		}
+		// drop the trailing part of the chromosome that were not used (e.g. because the goal is
+		// already reached:
+		int tobeRemoved = chromosome.size() - k  ;
+		while (tobeRemoved > 0) {
+			chromosome.remove(chromosome.size()-1) ;
+			tobeRemoved -- ;
 		}
 		System.out.println(">>> chromosome: " 
 		   + chromosome
@@ -470,12 +514,24 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	@Override
 	public void runAlgorithm() throws Exception {
+		
+		if (maxPopulationSize <= 4)
+			throw new IllegalArgumentException("maxPopulationSize should be at least 4.") ;
+		
 		long time = System.currentTimeMillis() ;
 		createInitialPopulation() ;
+		printStatus() ;
+	    if (knownButtons.isEmpty())
+	    	throw new IllegalArgumentException("The algorithm cannot find any action to activate.") ;
 		myPopulation.print(); 
+		this.remainingSearchBudget = this.remainingSearchBudget - (int) (System.currentTimeMillis()  - time) ;
 		while (! terminationConditionIsReached()) {
+			long t0 = System.currentTimeMillis() ;
 			evolve() ;
 			System.out.println(">>> EVOLUTION gen:" + generationNr) ;
+			printStatus() ;
+			long duration = System.currentTimeMillis() - t0 ;
+			this.remainingSearchBudget = this.remainingSearchBudget - (int) duration ;
 		}
 		time = System.currentTimeMillis() - time ;
 		System.out.println("** EVO") ;

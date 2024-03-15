@@ -90,7 +90,7 @@ public class MyTestingAI {
 			  var evo = new Evolutionary(agentConstructor) ;
 			  DebugUtil.log("** Using Evolutionary-algorithm") ;
 			  evo.maxPopulationSize = 10 ;
-			  evo.numberOfElitesToKeepDuringSelection = 7 ;
+			  evo.numberOfElitesToKeepDuringSelection = 3 ;
 			  evo.maxChromosomeLength = MyConfig.solutionLengthUpperBound ;
 			  algorithm = evo ;
 			  break ;
