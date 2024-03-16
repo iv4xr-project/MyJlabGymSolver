@@ -25,7 +25,7 @@ import world.LabEntity;
 
 /**
  * A search algorithm. It drives the agent, which in turns drives the SUT, to
- * get the SUT to a state satisfying {@link #goalPredicate}. If this goal-predicate
+ * get the SUT to a state satisfying {@link #topGoalPredicate}. If this goal-predicate
  * is left unspecified, the agent will keep running until its {@link #totalSearchBudget} is
  * exhausted.
  * 
@@ -78,11 +78,11 @@ public class BaseSearchAlgorithm {
 	}
 	
 	/**
-	 * If {@link #goalPredicate} is specified, this checks if it is achieved.
+	 * If {@link #topGoalPredicate} is specified, this checks if it is achieved.
 	 */
-	public boolean isGoalSolved() {
-		if (goalPredicate != null) 
-			return goalPredicate.test(getBelief()) ;
+	public boolean isTopGoalSolved() {
+		if (topGoalPredicate != null) 
+			return topGoalPredicate.test(getBelief()) ;
 		return false ;
 	}
 	
@@ -91,7 +91,7 @@ public class BaseSearchAlgorithm {
 	 * The predicate is evaluated on the agent's state. If the predicate is not
 	 * given (null), the agent will search until the search-budget is exhausted.
 	 */
-	public Predicate<State> goalPredicate ;
+	public Predicate<State> topGoalPredicate ;
 	
 	public Random rnd = new Random() ;
 
@@ -158,7 +158,7 @@ public class BaseSearchAlgorithm {
 			DebugUtil.log("*** TOTAL BUDGET IS EXHAUSTED.") ;
 			return true ;
 		}
-		if (isGoalSolved()) {
+		if (isTopGoalSolved()) {
 			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
 			return true ;
 		}
@@ -172,8 +172,8 @@ public class BaseSearchAlgorithm {
 
 	/**
 	 * Assign the given goal-structure to the test-agent and runs the agent to solve this goal.
-	 * The agent stops when the goal is reached, or when the general goal specified by
-	 * {@link #goalPredicate} is reached.
+	 * The agent stops when the given goal is reached, or when the general {{@link #terminationConditionIsReached()}
+	 * becomes true.
 	 * 
 	 * <p>The budget-parameter, if specified, specifies the maximum number of turns available 
 	 * to solve the goal. When this maximum is reached, the will stop pursuing the goal.
@@ -401,11 +401,11 @@ public class BaseSearchAlgorithm {
 		System.out.print("** The agent is ") ;
 		System.out.println(getBelief().worldmodel().health > 0 ? "ALIVE" : "DEAD") ;
 		System.out.print("** Search-goal: ") ;
-		if (goalPredicate == null) {
+		if (topGoalPredicate == null) {
 			System.out.println(" none specified") ;
 		}
 		else {
-			System.out.println(goalPredicate.test(getBelief()) ? "ACHIEVED" : "NOT-achieved") ;
+			System.out.println(topGoalPredicate.test(getBelief()) ? "ACHIEVED" : "NOT-achieved") ;
 		}
 	}
 

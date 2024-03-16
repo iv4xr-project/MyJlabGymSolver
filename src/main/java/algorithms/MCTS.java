@@ -221,7 +221,7 @@ public class MCTS extends BaseSearchAlgorithm {
 	 */
 	float rewardOfCurrentGameState() {
 		var S = this.getBelief() ;
-		if (goalPredicate != null && goalPredicate.test(S)) {
+		if (topGoalPredicate != null && topGoalPredicate.test(S)) {
 			return maxReward ;
 		}
 		return S.getConnections().size() + S.getNumberOfOpenDoors() ;
@@ -273,7 +273,7 @@ public class MCTS extends BaseSearchAlgorithm {
 			 doExplore(explorationBudget) ;
 			 
 			 // check if the goal-predicate if we have one, is solved:
-			 if (goalPredicate != null && goalPredicate.test(getBelief())) {
+			 if (topGoalPredicate != null && topGoalPredicate.test(getBelief())) {
 				// the search-goal is solved
 				 //goalPredicateSolved = true ;
 				 break ;
@@ -402,7 +402,7 @@ public class MCTS extends BaseSearchAlgorithm {
 			//System.out.println("*** TOTAL BUDGET IS EXHAUSTED.") ;
 			return true ;
 		}
-		if (isGoalSolved()) {
+		if (isTopGoalSolved()) {
 			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
 			return true ;
 		}
@@ -427,11 +427,11 @@ public class MCTS extends BaseSearchAlgorithm {
 		System.out.println("** #plays=" + mctree.numberOfPlays) ;
 		System.out.println("** avrg reward=" + mctree.averageReward) ;
 		System.out.print("** Search-goal: ") ;
-		if (goalPredicate == null) {
+		if (topGoalPredicate == null) {
 			System.out.println(" none specified") ;
 		}
 		else {
-			System.out.println(isGoalSolved() ? "ACHIEVED by " + this.winningplay 
+			System.out.println(isTopGoalSolved() ? "ACHIEVED by " + this.winningplay 
 					: "NOT-achieved") ;
 		}
 	}
@@ -445,7 +445,7 @@ public class MCTS extends BaseSearchAlgorithm {
 	 * Only relevant for single-search-mode.
 	 */
 	@Override
-	public boolean isGoalSolved() {
+	public boolean isTopGoalSolved() {
 		return winningplay != null ;
 	}
 	

@@ -137,14 +137,14 @@ public class MyTestingAI {
 		if (MyConfig.target != null) {
 			if (MyConfig.targetType.equals("door")) {
 				String doorId = MyConfig.target ;
-				algorithm.goalPredicate = S -> {
+				algorithm.topGoalPredicate = S -> {
 					var B = (BeliefState) S ;
 					return B.worldmodel.elements.get(doorId) != null && B.isOpen(doorId) ;
 				} ;
 			}
 			if (MyConfig.targetType.equals("flag")) {
 				String flagId = MyConfig.target ;
-				algorithm.goalPredicate = S -> {
+				algorithm.topGoalPredicate = S -> {
 					var B = (BeliefState) S ;
 					var flag = (LabEntity) B.worldmodel().elements.get(flagId) ;
 					return flag != null 

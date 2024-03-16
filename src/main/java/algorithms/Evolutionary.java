@@ -11,7 +11,49 @@ import nl.uu.cs.aplib.utils.Pair;
 import world.LabEntity;
 
 /**
- * Implementing evolutionary-search algorithm.
+ * Implementing an evolutionary-search algorithm.
+ * 
+ * <p><b>Chromosome</b>: is a sequence of interactables. For LR, these are buttons.
+ * 
+ * <p><b>Fitness</b> of a chromosome: the buttons in the chromosome are interacted, in
+ * the sequence they appear. This is done by aplib agent. If this execution manages to
+ * achieve the top-goal, the fitness will be some max-value. Else the fitness is the 
+ * number of connections discovered while executing + the number of open doors at the 
+ * end state.
+ * 
+ * <p>The algorithm does not know what are available interactables. So it starts by
+ * exploring LR to collect an initial set of known buttons. Later, whenever a chromosome
+ * is executed, exploration is added after every interaction with a button. Newly discovered
+ * buttons are added to the set of known buttons, along with newly discovered connections.
+ * 
+ * <p>The set of initial chromosomes will be singleton chromosomes, each containing one
+ * button from the set of known buttons obtained from the initial exploration when the
+ * algoroithm starts.
+ * 
+ * <p>The algorithm proceeds as follows:
+ * 
+ * <ul>
+ *     <li> (1) explore then create the initial population P 
+ *     <li> (2) WHILE termination-condition is still false:
+ *     <ul>
+ *         <li> (3) select a set of parents from P. The used selection scheme is currently set to 
+ *              select some K chromosomes with best fitness, and then to fill it with random
+ *              selection from the rest of P. The number of selected parents is limited to some
+ *              number (we use {{@link #maxPopulationSize}/2).
+ *         <li> (4) Randomly choose two parents. Decide whether to keep them, or to do cross-over.
+ *              Cross-over of two parents (p1,p2) creates two new chromosomes based on the parents.
+ *              They will replace the parents.
+ *              After doing this we have a set of new chromosomes; let's call it Q.
+ *         <li> (5) Generates new chromosomes from Q by either mutating them or extending them. Mutating
+ *              a chromosome ch means we replace one interactable in it with another (from the set
+ *              of known interactables!). Extending ch means to randomly insert a new interactable 
+ *              somewhere in ch.
+ *              We fill Q with these new chromosomes, up to some maximim size ({@link #maxPopulationSize}).
+ *         <li> (6) We replace P with Q.
+ *         <li> (7) For each chromosome in P we calculate its fitness-value.
+ *                   
+ *     </ul>
+ * </ul>
  */
 public class Evolutionary extends BaseSearchAlgorithm {
 
@@ -215,7 +257,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			List<String> tau = new LinkedList<>() ; 
 			tau.add(B) ;
 			myPopulation.add(fitnessValue(tau));
-			if (isGoalSolved()) break ;	
+			if (isTopGoalSolved()) break ;	
 		}
 		
 		generationNr = 1  ;
@@ -299,7 +341,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			}
 			var info = fitnessValue(tau) ;
 			myPopulation.add(info);
-			if (isGoalSolved()) 
+			if (isTopGoalSolved()) 
 				// found a solution!
 				break ;
 		}
@@ -439,7 +481,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			 
 			 // check if the goal-predicate if we have one, is solved:
 			 var S = getBelief() ;
-			 if (goalPredicate != null && goalPredicate.test(S)) {
+			 if (topGoalPredicate != null && topGoalPredicate.test(S)) {
 				// the search-goal is solved
 				 goalPredicateSolved = true ;
 				 break ;
@@ -450,7 +492,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		float fitness = 0 ;
 		
 		// don't replace this with isGoalSolved():
-		if (goalPredicate != null && goalPredicate.test(S)) {
+		if (topGoalPredicate != null && topGoalPredicate.test(S)) {
 			fitness = maxFitness ;	
 		}
 		else {
@@ -505,7 +547,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			DebugUtil.log("*** TOTAL BUDGET IS EXHAUSTED.") ;
 			return true ;
 		}
-		if (isGoalSolved()) {
+		if (isTopGoalSolved()) {
 			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
 			return true ;
 		}
@@ -546,11 +588,11 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		System.out.println("** Total budget=" + this.totalSearchBudget
 				+ ", unused=" + Math.max(0,this.remainingSearchBudget)) ;
 		System.out.print("** Search-goal: ") ;
-		if (goalPredicate == null) {
+		if (topGoalPredicate == null) {
 			System.out.println(" none specified") ;
 		}
 		else {
-			System.out.println(isGoalSolved() ? "ACHIEVED" : "NOT-achieved") ;
+			System.out.println(isTopGoalSolved() ? "ACHIEVED" : "NOT-achieved") ;
 		}
 		printStatus() ;
 	}
@@ -563,9 +605,9 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	}
 	
 	@Override
-	public boolean isGoalSolved() {
-		if (goalPredicate != null && !myPopulation.population.isEmpty()) 
-			return goalPredicate.test(myPopulation.getBest().belief) ;
+	public boolean isTopGoalSolved() {
+		if (topGoalPredicate != null && !myPopulation.population.isEmpty()) 
+			return topGoalPredicate.test(myPopulation.getBest().belief) ;
 		return false ;
 	}
 }

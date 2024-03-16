@@ -139,11 +139,11 @@ public class AlgorithmOne extends BaseSearchAlgorithm {
 		System.out.print("** The agent is ") ;
 		System.out.println(getBelief().worldmodel().health > 0 ? "ALIVE" : "DEAD") ;
 		System.out.print("** Search-goal: ") ;
-		if (goalPredicate == null) {
+		if (topGoalPredicate == null) {
 			System.out.println(" none specified") ;
 		}
 		else {
-			System.out.println(goalPredicate.test(getBelief()) ? "ACHIEVED" : "NOT-achieved") ;
+			System.out.println(topGoalPredicate.test(getBelief()) ? "ACHIEVED" : "NOT-achieved") ;
 		}
 	}
 	

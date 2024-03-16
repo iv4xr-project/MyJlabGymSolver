@@ -1,6 +1,7 @@
 /target/
 gym
 /gym/
+/javadoc/
 .DS_Store
 .project
 .classpath

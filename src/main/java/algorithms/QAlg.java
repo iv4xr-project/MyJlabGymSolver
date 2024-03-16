@@ -68,7 +68,7 @@ public class QAlg extends BaseSearchAlgorithm {
 			//System.out.println("*** TOTAL BUDGET IS EXHAUSTED.") ;
 			return true ;
 		}
-		if (isGoalSolved()) {
+		if (isTopGoalSolved()) {
 			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
 			return true ;
 		}
@@ -93,7 +93,7 @@ public class QAlg extends BaseSearchAlgorithm {
 	
 	float valueOfCurrentGameState() {
 		var S = this.getBelief() ;
-		if (goalPredicate != null && goalPredicate.test(S)) {
+		if (topGoalPredicate != null && topGoalPredicate.test(S)) {
 			return maxReward ;
 		}
 		return 3*S.getConnections().size() + S.getNumberOfOpenDoors() ;
@@ -259,11 +259,11 @@ public class QAlg extends BaseSearchAlgorithm {
 		System.out.println("** #plays=" + numOfEpisodes) ;
 		System.out.println("** avrg episode reward=" + totEpisodeAward/(float) numOfEpisodes) ;
 		System.out.print("** Search-goal: ") ;
-		if (goalPredicate == null) {
+		if (topGoalPredicate == null) {
 			System.out.println(" none specified") ;
 		}
 		else {
-			System.out.println(isGoalSolved() ? "ACHIEVED by " + this.winningplay 
+			System.out.println(isTopGoalSolved() ? "ACHIEVED by " + this.winningplay 
 					: "NOT-achieved") ;
 		}
 	}
@@ -277,7 +277,7 @@ public class QAlg extends BaseSearchAlgorithm {
 	 * Only relevant for single-search-mode.
 	 */
 	@Override
-	public boolean isGoalSolved() {
+	public boolean isTopGoalSolved() {
 		return winningplay != null ;
 	}
 
