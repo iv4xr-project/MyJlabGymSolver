@@ -2,6 +2,7 @@ package stvrExperiment;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalTime;
 
 import static java.nio.file.StandardOpenOption.* ;
@@ -21,6 +22,7 @@ import game.LabRecruitsTestServer;
 import game.Platform;
 import gameTestingContest.MyConfig;
 import gameTestingContest.MyTestingAI;
+import leveldefUtil.LRconnectionLogic;
 
 public class STVRExperiment {
 	
@@ -34,14 +36,14 @@ public class STVRExperiment {
 	
 	//static String[] targetLevels = { "buttons_doors_1", "samira_8room" } ;
 	static String[] targetLevels = { 
-			"BM2021_diff1_R3_1_1_H",  // minimum solution: 2
-			"BM2021_diff1_R4_1_1",    // minimum solution: 4
-			"BM2021_diff1_R4_1_1_M",  // minimum solution: 3
-			"BM2021_diff2_R5_2_2_M",  // minimum solution: 2
-			"BM2021_diff2_R7_2_2",    // minimum solution: 4
-			"BM2021_diff3_R4_2_2",    // minimum solution: 0
-			"BM2021_diff3_R4_2_2_M",  // minimum solution: 4
-			"BM2021_diff3_R7_3_3"} ;  // minimum solution: 2
+			"BM2021_diff1_R3_1_1_H"   // minimum solution: 2
+			,"BM2021_diff1_R4_1_1"    // minimum solution: 4
+			,"BM2021_diff1_R4_1_1_M"  // minimum solution: 3
+			,"BM2021_diff2_R5_2_2_M"  // minimum solution: 2
+			,"BM2021_diff2_R7_2_2"    // minimum solution: 4
+			,"BM2021_diff3_R4_2_2"    // minimum solution: 0
+			,"BM2021_diff3_R4_2_2_M"  // minimum solution: 4
+			,"BM2021_diff3_R7_3_3"} ; // minimum solution: 2
 	// Durk, Sanctuary too?
 	
 	// runtime of Samira's alg, in seconds:
@@ -66,56 +68,69 @@ public class STVRExperiment {
 	// Bounding the search depth to this:
 	static int maxSearchDepth = 5 ;
 	
-	static class Result {
+	static class Result1 {
 		String level ;
 		String alg ;
-		int numberOfConnection ;
-		List<Integer> runtime = new LinkedList<>() ;
-		List<Boolean> goalsolved = new LinkedList<>() ;
-		List<Integer> connectionsInferred = new LinkedList<> () ;
-		List<Integer> correctConnections = new LinkedList<> () ;
-		List<Integer> wrongConnections = new LinkedList<> () ;
-	    
-		int numbeOfTimesGoalSolved() {
-			return (int) goalsolved.stream().filter(v -> v == true).count() ;
-		}
+		int numberOfConnections ;
+		int runtime ;
+		boolean goalsolved ;
+		int connectionsInferred ;
+		int correctConnections ;
+		int wrongConnections ;
 		
-		float avrgRuntime() {
-			double a = runtime.stream().collect(Collectors
-								  .averagingDouble(t -> (double) t)) ;
-			return (float) a ;
-		}
-		
-		float avrgInferredConnections() {
-			double a = connectionsInferred.stream().collect(Collectors
-								  .averagingDouble(t -> (double) t)) ;
-			return (float) a ;
-		}
-		
-		float avrgCorrect() {
-			double a = correctConnections.stream().collect(Collectors
-								  .averagingDouble(t -> (double) t)) ;
-			return (float) a ;
-		}
-		
-		float avrgWrong() {
-			double a = wrongConnections.stream().collect(Collectors
-								  .averagingDouble(t -> (double) t)) ;
-			return (float) a ;
+		@Override
+		public String toString() {
+			String z = "== level:" + level ;
+			z +=     "\n== alg:" + alg ;
+			z +=     "\n== goal:" + (goalsolved ? "ACHIEVED" : "X") ;
+			z +=     "\n== runtime(sec):" + runtime ;
+			z +=     "\n== #connections:" + numberOfConnections ;
+			z +=     "\n== #inferred:"    + connectionsInferred ;
+			z +=     "\n== #correct:"     + correctConnections ;
+			z +=     "\n== #wrong:"       + wrongConnections ;
+			return z ;
 		}
 	}
 	
-	Map<String,Result> evo12_results = new HashMap<>() ;
-	Map<String,Result> evo5min_results = new HashMap<>() ;
-	Map<String,Result> evo10min_results = new HashMap<>() ;
+	static int numbeOfTimesGoalSolved(List<Result1> rss) {
+		return (int) rss.stream().filter(v -> v.goalsolved == true).count() ;
+	}
 	
-	Map<String,Result> mcts12_results = new HashMap<>() ;
-	Map<String,Result> mcts5min_results = new HashMap<>() ;
-	Map<String,Result> mcts10min_results = new HashMap<>() ;
+	static float avrgRuntime(List<Result1> rss) {
+		double a = rss.stream().map(r -> (double) r.runtime).collect(Collectors
+							  .averagingDouble(t -> t)) ;
+		return (float) a ;
+	}
 	
-	Map<String,Result> q12_results = new HashMap<>() ;
-	Map<String,Result> q5min_results = new HashMap<>() ;
-	Map<String,Result> q10min_results = new HashMap<>() ;
+	static float avrgInferredConnections(List<Result1> rss) {
+		double a = rss.stream().map(r -> (double) r.connectionsInferred).collect(Collectors
+							  .averagingDouble(t -> t)) ;
+		return (float) a ;
+	}
+	
+	static float avrgCorrect(List<Result1> rss) {
+		double a = rss.stream().map(r -> (double) r.correctConnections).collect(Collectors
+							  .averagingDouble(t -> t)) ;
+		return (float) a ;
+	}
+	
+	static float avrgWrong(List<Result1> rss) {
+		double a = rss.stream().map(r -> (double) r.wrongConnections).collect(Collectors
+							  .averagingDouble(t -> t)) ;
+		return (float) a ;
+	}
+	
+	Map<String,List<Result1>> evo12_results = new HashMap<>() ;
+	Map<String,List<Result1>> evo5min_results = new HashMap<>() ;
+	Map<String,List<Result1>> evo10min_results = new HashMap<>() ;
+	
+	Map<String,List<Result1>> mcts12_results = new HashMap<>() ;
+	Map<String,List<Result1>> mcts5min_results = new HashMap<>() ;
+	Map<String,List<Result1>> mcts10min_results = new HashMap<>() ;
+	
+	Map<String,List<Result1>> q12_results = new HashMap<>() ;
+	Map<String,List<Result1>> q5min_results = new HashMap<>() ;
+	Map<String,List<Result1>> q10min_results = new HashMap<>() ;
 	
 	static void launchLabRcruits() {
         var useGraphics = true; // set this to false if you want to run the game without graphics
@@ -130,7 +145,7 @@ public class STVRExperiment {
 	 * Append the given string to a file. Create the file if it does not 
 	 * exists.
 	 */
-	void writeToFile(String dir, String fname, String s) throws IOException {
+	void writelnToFile(String dir, String fname, String s) throws IOException {
 	    Files.writeString(
 	        Path.of(dir, fname),
 	        s + "\n",
@@ -138,9 +153,6 @@ public class STVRExperiment {
 	    );
 	}
 	
-	String mkFileName(String levelName) {
-		return levelName + "_result.txt" ;
-	}
 	
 	MyTestingAI createAnAlgorithm(String algorithmName, 
 			int levelNr, 
@@ -180,28 +192,88 @@ public class STVRExperiment {
         return myTestingAI ;
 	}
 	
-	
-	public void runAlgorithms(int levelNr, int timeBudget, int numberOfRepeat) {
+	Result1 runAlgortihm(String algorithmName,
+			int levelNr, 
+			String agentId,
+			int rndSeed,
+			int timeBudget) throws Exception {
 		String level = targetLevels[levelNr] ;
-		// EVO 
-		for (int k=0; k<numberOfRepeat; k++) { 
-			 // repeated runs
-			int rndSeed = randomSeeds[k] ;
-			// run evo
-		}
-		// MCTS 
-		for (int k=0; k<numberOfRepeat; k++) { 
-			int rndSeed = randomSeeds[k] ;
-			// run mcts
-		}
-		// Q 
-		for (int k=0; k<numberOfRepeat; k++) { 
-			int rndSeed = randomSeeds[k] ;
-			// run Q
-		}
+		String levelFile = Paths.get(levelsDir, level + ".csv").toString() ;
+		var referenceLogic = LRconnectionLogic.parseConnections(levelFile) ;
+		
+		// instantiate the algorithm:
+		var alg = createAnAlgorithm(algorithmName,levelNr,agentId,rndSeed,timeBudget) ;
+		// run the algorithm:
+		long t0 = System.currentTimeMillis() ;
+		var discoveredConnections = alg.exploreLRLogic() ;
+		// runtime in second
+		long runtime = (System.currentTimeMillis() - t0)/1000 ;
+		
+		Result1 R = new Result1() ;
+		R.alg = algorithmName ;
+		R.level = level ;
+		R.runtime = (int) runtime ;
+		R.goalsolved = alg.algorithm.isTopGoalSolved() ;
+		var Z = LRconnectionLogic.compareConnection(referenceLogic, discoveredConnections) ;
+		R.numberOfConnections = Z.get("#connections") ;
+		R.connectionsInferred = Z.get("#inferred") ;
+		R.correctConnections = Z.get("#correct") ;
+		R.wrongConnections = Z.get("#wrong") ;
+		return R ;
 	}
 	
-	public void runExpeiment_Test() {
+	
+	Map<String,List<Result1>> runAlgorithms(
+			int levelNr, 
+			String agentId, 
+			int timeBudget, 
+			int numberOfRepeat) throws Exception {
+		
+		String level = targetLevels[levelNr] ;
+		Map<String,List<Result1>> results = new HashMap<>() ;
+		
+		// EVO ========================================
+		String algName = "Evo" ;
+		List<Result1> algresults = new LinkedList<>() ;
+		for (int k=0; k<numberOfRepeat; k++) { 
+		    // repeated runs
+			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
+			algresults.add(R) ;
+		}
+		List<Result1> evoResults = new LinkedList<>() ;
+		evoResults.addAll(algresults) ;
+		results.put(algName, evoResults) ;
+		algresults.clear();
+		
+		// MCTS ========================================
+		algName = "MCTS" ;
+		algresults = new LinkedList<>() ;
+		for (int k=0; k<numberOfRepeat; k++) { 
+		    // repeated runs
+			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
+			algresults.add(R) ;
+		}
+		List<Result1> mctsResults = new LinkedList<>() ;
+		mctsResults.addAll(algresults) ;
+		results.put(algName, mctsResults) ;
+		algresults.clear();
+		
+		// Q ========================================
+		algName = "Q" ;
+		algresults = new LinkedList<>() ;
+		for (int k=0; k<numberOfRepeat; k++) { 
+		    // repeated runs
+			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
+			algresults.add(R) ;
+		}
+		List<Result1> qResults = new LinkedList<>() ;
+		qResults.addAll(algresults) ;
+		results.put(algName, qResults) ;
+		
+		return results ;
+	}
+	
+	public void runExpeiment12_Test() throws Exception {
 		long t0 = System.currentTimeMillis() ;
 		for (var lev=0; lev<targetLevels.length; lev++) {
 			var level = targetLevels[lev] ;
@@ -209,24 +281,16 @@ public class STVRExperiment {
 			
 			int timeBudget12 = (int) (1.2f * (float) baseTime) ;
 			
-			int time5min  = 300000 ;
-			int time10min = 600000 ;
-			
-			runAlgorithms(lev,timeBudget12,repeatNumberPerRun) ;
-			runAlgorithms(lev,time5min,repeatNumberPerRunGroup2) ;
-			runAlgorithms(lev,time10min,repeatNumberPerRunGroup2) ;
-		}
-		float totTime = (float) (System.currentTimeMillis() - t0) ;
-		totTime = Math.round(totTime / 6000f)/10f ; // time in minutes
-		System.out.println("** TOT-runtime: " + totTime + " min") ;
-		
+			var results = runAlgorithms(lev,"agent1",timeBudget12,repeatNumberPerRun) ;
+		}		
 	}
 	
 	//@Test
 	public void testWriteFile() throws IOException {
 		String level = targetLevels[0] ;
-		writeToFile(dataDir,mkFileName(level),">>> " + LocalTime.now()) ;
-		writeToFile(dataDir,mkFileName(level),"Another line") ;
+		String resultfile = level + "_result.txt" ;
+		writelnToFile(dataDir,resultfile,">>> " + LocalTime.now()) ;
+		writelnToFile(dataDir,resultfile,"Another line") ;
 	}
 
 }

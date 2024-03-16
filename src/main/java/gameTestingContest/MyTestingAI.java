@@ -27,7 +27,12 @@ public class MyTestingAI {
 	 * Agent-constructor. Used for Evo-algorithm.
 	 */
 	public Function<Void,LabRecruitsTestAgent> agentConstructor = null ;
-		    
+	
+	
+	/**
+	 * The used search-algorithm.
+	 */
+	public BaseSearchAlgorithm algorithm ;
 
 	/**
 	 * IMPLEMENT THIS METHOD.
@@ -81,8 +86,6 @@ public class MyTestingAI {
 	 * 
 	 */
 	public Set<Pair<String, String>> exploreLRLogic() throws Exception {
-		
-		BaseSearchAlgorithm algorithm = null ;
 		
 		switch(MyConfig.ALG) {
 		
