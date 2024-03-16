@@ -199,7 +199,8 @@ public class STVRExperiment {
 			int levelNr, 
 			String agentId,
 			int rndSeed,
-			int timeBudget) throws Exception {
+			int timeBudget,
+			String dirToSaveResult) throws Exception {
 		String level = targetLevels[levelNr] ;
 		String levelFile = Paths.get(levelsDir, level + ".csv").toString() ;
 		var referenceLogic = LRconnectionLogic.parseConnections(levelFile) ;
@@ -225,29 +226,29 @@ public class STVRExperiment {
 		// write the result to a result file:
 		System.out.println(R.toString()) ;
 		String resultFileName = level + "_" + algorithmName + "_result.txt" ;	
-		writelnToFile(dataDir,resultFileName,"==================",true) ;
-		writelnToFile(dataDir,resultFileName,R.toString(),true) ;
+		writelnToFile(dirToSaveResult,resultFileName,"==================",true) ;
+		writelnToFile(dirToSaveResult,resultFileName,R.toString(),true) ;
 		return R ;
 	}
 	
 	void writeResultsToFile(
 			String levelName,
 			String algName,
+			String dir,
 			String resultFileName,
 			List<Result1> algresults
 			) throws IOException {
 		
 		String levelFile = Paths.get(levelsDir, levelName + ".csv").toString() ;
 		var referenceLogic = LRconnectionLogic.parseConnections(levelFile) ;
-		
 		System.out.println("*********************") ;
-		writelnToFile(dataDir,resultFileName, "====== " + levelName + " with " + algName, true) ;
-		writelnToFile(dataDir,resultFileName, "== avrg runtime:" + avrgRuntime(algresults), true) ;
-		writelnToFile(dataDir,resultFileName, "== #solved:" + numbeOfTimesGoalSolved(algresults), true) ;
-		writelnToFile(dataDir,resultFileName, "== #connections:" + referenceLogic.size(), true) ;
-		writelnToFile(dataDir,resultFileName, "== #inferred:" + avrgInferredConnections(algresults), true) ;
-		writelnToFile(dataDir,resultFileName, "== #correct:" + avrgCorrect(algresults), true) ;
-		writelnToFile(dataDir,resultFileName, "== #wrong:" + avrgWrong(algresults), true) ;
+		writelnToFile(dir,resultFileName, "====== " + levelName + " with " + algName, true) ;
+		writelnToFile(dir,resultFileName, "== avrg runtime:" + avrgRuntime(algresults), true) ;
+		writelnToFile(dir,resultFileName, "== #solved:" + numbeOfTimesGoalSolved(algresults), true) ;
+		writelnToFile(dir,resultFileName, "== #connections:" + referenceLogic.size(), true) ;
+		writelnToFile(dir,resultFileName, "== #inferred:" + avrgInferredConnections(algresults), true) ;
+		writelnToFile(dir,resultFileName, "== #correct:" + avrgCorrect(algresults), true) ;
+		writelnToFile(dir,resultFileName, "== #wrong:" + avrgWrong(algresults), true) ;
 	}
 	
 	
@@ -263,15 +264,17 @@ public class STVRExperiment {
 		writelnToFile(dataDir,resultFileName,"*********************",true) ;
 		List<Result1> algresults = new LinkedList<>() ;
 		
+		String dir = Paths.get(dataDir, exerimentName).toString() ;
+		
 		// EVO ========================================
 		String algName = "Evo" ;
 		algresults.clear();
 		for (int k=0; k<numberOfRepeat; k++) { 
 		    // repeated runs
-			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
+			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget,dir) ;
 			algresults.add(R) ;
 		}
-		writeResultsToFile(level,algName,resultFileName,algresults) ;		
+		writeResultsToFile(level,algName,dir,resultFileName,algresults) ;		
 
 		
 		// MCTS ========================================
@@ -279,20 +282,20 @@ public class STVRExperiment {
 		algresults.clear();
 		for (int k=0; k<numberOfRepeat; k++) { 
 		    // repeated runs
-			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
+			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget,dir) ;
 			algresults.add(R) ;
 		}
-		writeResultsToFile(level,algName,resultFileName,algresults) ;		
+		writeResultsToFile(level,algName,dir,resultFileName,algresults) ;		
 		
 		// Q ========================================
 		algName = "Q" ;
 		algresults.clear();
 		for (int k=0; k<numberOfRepeat; k++) { 
 		    // repeated runs
-			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
+			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget,dir) ;
 			algresults.add(R) ;
 		}
-		writeResultsToFile(level,algName,resultFileName,algresults) ;		
+		writeResultsToFile(level,algName,dir,resultFileName,algresults) ;		
 	}
 	
 	public void runExpeiment12_Test() throws Exception {
