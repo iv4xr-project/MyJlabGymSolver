@@ -145,12 +145,15 @@ public class STVRExperiment {
 	 * Append the given string to a file. Create the file if it does not 
 	 * exists.
 	 */
-	void writelnToFile(String dir, String fname, String s) throws IOException {
+	void writelnToFile(String dir, String fname, String s, boolean echo) throws IOException {
 	    Files.writeString(
 	        Path.of(dir, fname),
 	        s + "\n",
 	        CREATE, APPEND
 	    );
+	    if (echo) {
+	    	System.out.println(s) ;
+	    }
 	}
 	
 	
@@ -219,58 +222,77 @@ public class STVRExperiment {
 		R.connectionsInferred = Z.get("#inferred") ;
 		R.correctConnections = Z.get("#correct") ;
 		R.wrongConnections = Z.get("#wrong") ;
+		// write the result to a result file:
+		System.out.println(R.toString()) ;
+		String resultFileName = level + "_" + algorithmName + "_result.txt" ;	
+		writelnToFile(dataDir,resultFileName,"==================",true) ;
+		writelnToFile(dataDir,resultFileName,R.toString(),true) ;
 		return R ;
 	}
 	
+	void writeResultsToFile(
+			String levelName,
+			String algName,
+			String resultFileName,
+			List<Result1> algresults
+			) throws IOException {
+		
+		String levelFile = Paths.get(levelsDir, levelName + ".csv").toString() ;
+		var referenceLogic = LRconnectionLogic.parseConnections(levelFile) ;
+		
+		System.out.println("*********************") ;
+		writelnToFile(dataDir,resultFileName, "====== " + levelName + " with " + algName, true) ;
+		writelnToFile(dataDir,resultFileName, "== avrg runtime:" + avrgRuntime(algresults), true) ;
+		writelnToFile(dataDir,resultFileName, "== #solved:" + numbeOfTimesGoalSolved(algresults), true) ;
+		writelnToFile(dataDir,resultFileName, "== #connections:" + referenceLogic.size(), true) ;
+		writelnToFile(dataDir,resultFileName, "== #inferred:" + avrgInferredConnections(algresults), true) ;
+		writelnToFile(dataDir,resultFileName, "== #correct:" + avrgCorrect(algresults), true) ;
+		writelnToFile(dataDir,resultFileName, "== #wrong:" + avrgWrong(algresults), true) ;
+	}
 	
-	Map<String,List<Result1>> runAlgorithms(
+	
+	void runAlgorithms(
+			String exerimentName,
 			int levelNr, 
 			String agentId, 
 			int timeBudget, 
 			int numberOfRepeat) throws Exception {
 		
 		String level = targetLevels[levelNr] ;
-		Map<String,List<Result1>> results = new HashMap<>() ;
+		String resultFileName = exerimentName + "_results.txt" ;
+		writelnToFile(dataDir,resultFileName,"*********************",true) ;
+		List<Result1> algresults = new LinkedList<>() ;
 		
 		// EVO ========================================
 		String algName = "Evo" ;
-		List<Result1> algresults = new LinkedList<>() ;
+		algresults.clear();
 		for (int k=0; k<numberOfRepeat; k++) { 
 		    // repeated runs
 			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
 			algresults.add(R) ;
 		}
-		List<Result1> evoResults = new LinkedList<>() ;
-		evoResults.addAll(algresults) ;
-		results.put(algName, evoResults) ;
-		algresults.clear();
+		writeResultsToFile(level,algName,resultFileName,algresults) ;		
+
 		
 		// MCTS ========================================
 		algName = "MCTS" ;
-		algresults = new LinkedList<>() ;
+		algresults.clear();
 		for (int k=0; k<numberOfRepeat; k++) { 
 		    // repeated runs
 			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
 			algresults.add(R) ;
 		}
-		List<Result1> mctsResults = new LinkedList<>() ;
-		mctsResults.addAll(algresults) ;
-		results.put(algName, mctsResults) ;
-		algresults.clear();
+		writeResultsToFile(level,algName,resultFileName,algresults) ;		
 		
 		// Q ========================================
 		algName = "Q" ;
-		algresults = new LinkedList<>() ;
+		algresults.clear();
 		for (int k=0; k<numberOfRepeat; k++) { 
 		    // repeated runs
 			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget) ;
 			algresults.add(R) ;
 		}
-		List<Result1> qResults = new LinkedList<>() ;
-		qResults.addAll(algresults) ;
-		results.put(algName, qResults) ;
-		
-		return results ;
+		writeResultsToFile(level,algName,resultFileName,algresults) ;		
 	}
 	
 	public void runExpeiment12_Test() throws Exception {
@@ -281,7 +303,7 @@ public class STVRExperiment {
 			
 			int timeBudget12 = (int) (1.2f * (float) baseTime) ;
 			
-			var results = runAlgorithms(lev,"agent1",timeBudget12,repeatNumberPerRun) ;
+			runAlgorithms("RT12",lev,"agent1",timeBudget12,repeatNumberPerRun) ;
 		}		
 	}
 	
@@ -289,8 +311,8 @@ public class STVRExperiment {
 	public void testWriteFile() throws IOException {
 		String level = targetLevels[0] ;
 		String resultfile = level + "_result.txt" ;
-		writelnToFile(dataDir,resultfile,">>> " + LocalTime.now()) ;
-		writelnToFile(dataDir,resultfile,"Another line") ;
+		writelnToFile(dataDir,resultfile,">>> " + LocalTime.now(),true) ;
+		writelnToFile(dataDir,resultfile,"Another line",true) ;
 	}
 
 }
