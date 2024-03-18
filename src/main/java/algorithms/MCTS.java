@@ -315,14 +315,17 @@ public class MCTS extends BaseSearchAlgorithm {
 			throw new IllegalArgumentException() ;
 		
 		float bestUCB = Float.NEGATIVE_INFINITY ;
-		Node bestChild = null ;
 		for (var ch : nd.children) {
 			float U = ch.ucbValue() ;
 			if (U > bestUCB) {
 				bestUCB = U ;
-				bestChild = ch ;
 			}
 		}
+		final float bestUCB_ = bestUCB ;
+		// we might have multiple maxes. If so, we choose randomly among the maxes:
+		var maxes = nd.children.stream().filter(ch -> ch.ucbValue() >= bestUCB_)
+				.collect(Collectors.toList()) ;
+		Node bestChild = maxes.get(rnd.nextInt(maxes.size())) ;
 		return  chooseLeaf(bestChild) ;
 	}
 	
@@ -387,12 +390,12 @@ public class MCTS extends BaseSearchAlgorithm {
 		
 		System.out.println(">>> EXPAND") ;
 
-		// else, go to the first child, and evaluate it:
+		// else, go to a random child, and evaluate it:
 		for (var ch : leaf.children) {
 			ch.parent = leaf ;
 			ch.depth = leaf.depth+1 ;
 		}
-		evaluateLeaf(leaf.children.get(0)) ;
+		evaluateLeaf(leaf.children.get(rnd.nextInt(leaf.children.size()))) ;
 	}
 	
 	@Override
