@@ -2,6 +2,7 @@
 gym
 /gym/
 /javadoc/
+/data/
 .DS_Store
 .project
 .classpath

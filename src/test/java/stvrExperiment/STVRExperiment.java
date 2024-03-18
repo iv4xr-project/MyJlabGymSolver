@@ -28,12 +28,16 @@ public class STVRExperiment {
 	
 	static String projectRootDir = System.getProperty("user.dir") ;
 	
-	static String levelsDir = projectRootDir + "/src/test/resources/levels";
+	static String levelsDir = projectRootDir + "/src/test/resources/levels/contest";
 	
 	static String dataDir = projectRootDir + "/data" ;
 	
-	static LabRecruitsTestServer labRecruitsBinding;
-	
+	static String[] availableAlgorithms = { 
+			  "Evo"
+			, "MCTS"
+			, "Q"
+	} ;
+		
 	//static String[] targetLevels = { "buttons_doors_1", "samira_8room" } ;
 	static String[] targetLevels = { 
 			"BM2021_diff1_R3_1_1_H"   // minimum solution: 2
@@ -43,7 +47,8 @@ public class STVRExperiment {
 			,"BM2021_diff2_R7_2_2"    // minimum solution: 4
 			,"BM2021_diff3_R4_2_2"    // minimum solution: 0
 			,"BM2021_diff3_R4_2_2_M"  // minimum solution: 4
-			,"BM2021_diff3_R7_3_3"} ; // minimum solution: 2
+			,"BM2021_diff3_R7_3_3" // minimum solution: 2
+	} ;
 	// Durk, Sanctuary too?
 	
 	// runtime of Samira's alg, in seconds:
@@ -67,6 +72,8 @@ public class STVRExperiment {
 	
 	// Bounding the search depth to this:
 	static int maxSearchDepth = 5 ;
+	
+	static LabRecruitsTestServer labRecruitsBinding;
 	
 	static class Result1 {
 		String level ;
@@ -120,18 +127,6 @@ public class STVRExperiment {
 		return (float) a ;
 	}
 	
-	Map<String,List<Result1>> evo12_results = new HashMap<>() ;
-	Map<String,List<Result1>> evo5min_results = new HashMap<>() ;
-	Map<String,List<Result1>> evo10min_results = new HashMap<>() ;
-	
-	Map<String,List<Result1>> mcts12_results = new HashMap<>() ;
-	Map<String,List<Result1>> mcts5min_results = new HashMap<>() ;
-	Map<String,List<Result1>> mcts10min_results = new HashMap<>() ;
-	
-	Map<String,List<Result1>> q12_results = new HashMap<>() ;
-	Map<String,List<Result1>> q5min_results = new HashMap<>() ;
-	Map<String,List<Result1>> q10min_results = new HashMap<>() ;
-	
 	static void launchLabRcruits() {
         var useGraphics = true; // set this to false if you want to run the game without graphics
         SocketReaderWriter.debug = false;
@@ -156,7 +151,12 @@ public class STVRExperiment {
 	    }
 	}
 	
-	
+	/**
+	 * Create an instance of a search algorithm (Evo/Q/MCTS). It will be wrapped inside 
+	 * a MyTestingAI object. 
+	 * 
+	 * <p>The timeBudget is in msec.
+	 */
 	MyTestingAI createAnAlgorithm(String algorithmName, 
 			int levelNr, 
 			String agentId,
@@ -195,6 +195,12 @@ public class STVRExperiment {
         return myTestingAI ;
 	}
 	
+	
+	/**
+	 * Run the specified algorithm on the specified LR level. The result will be printed
+	 * to a file and returned as an instance of Result1.
+	 * <p>The timeBudget is in msec.
+	 */
 	Result1 runAlgortihm(String algorithmName,
 			int levelNr, 
 			String agentId,
@@ -251,7 +257,11 @@ public class STVRExperiment {
 		writelnToFile(dir,resultFileName, "== #wrong:" + avrgWrong(algresults), true) ;
 	}
 	
-	
+	/**
+	 * Run all algorithms on the given target level. Write the result=summary of every 
+	 * algorithm to a file.
+	 * <p>The timeBudget is in msec.
+	 */
 	void runAlgorithms(
 			String exerimentName,
 			int levelNr, 
@@ -261,53 +271,39 @@ public class STVRExperiment {
 		
 		String level = targetLevels[levelNr] ;
 		String resultFileName = exerimentName + "_results.txt" ;
-		writelnToFile(dataDir,resultFileName,"*********************",true) ;
 		List<Result1> algresults = new LinkedList<>() ;
 		
 		String dir = Paths.get(dataDir, exerimentName).toString() ;
+		writelnToFile(dir,resultFileName,"*********************",true) ;
 		
-		// EVO ========================================
-		String algName = "Evo" ;
-		algresults.clear();
-		for (int k=0; k<numberOfRepeat; k++) { 
-		    // repeated runs
-			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget,dir) ;
-			algresults.add(R) ;
-		}
-		writeResultsToFile(level,algName,dir,resultFileName,algresults) ;		
-
-		
-		// MCTS ========================================
-		algName = "MCTS" ;
-		algresults.clear();
-		for (int k=0; k<numberOfRepeat; k++) { 
-		    // repeated runs
-			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget,dir) ;
-			algresults.add(R) ;
-		}
-		writeResultsToFile(level,algName,dir,resultFileName,algresults) ;		
-		
-		// Q ========================================
-		algName = "Q" ;
-		algresults.clear();
-		for (int k=0; k<numberOfRepeat; k++) { 
-		    // repeated runs
-			var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget,dir) ;
-			algresults.add(R) ;
-		}
-		writeResultsToFile(level,algName,dir,resultFileName,algresults) ;		
+		for (int a=0 ; a < availableAlgorithms.length; a++) {
+			// iterate over the algorithms: Evo/MCTS/Q
+			String algName = availableAlgorithms[a] ;
+			algresults.clear();
+			for (int k=0; k<numberOfRepeat; k++) { 
+			    // repeated runs
+				var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget,dir) ;
+				algresults.add(R) ;
+			}
+			writeResultsToFile(level,algName,dir,resultFileName,algresults) ;
+		}	
 	}
 	
+	@Test
 	public void runExpeiment12_Test() throws Exception {
+		launchLabRcruits() ;
 		long t0 = System.currentTimeMillis() ;
 		for (var lev=0; lev<targetLevels.length; lev++) {
 			var level = targetLevels[lev] ;
 			int baseTime = SAruntime[lev] ;
 			
-			int timeBudget12 = (int) (1.2f * (float) baseTime) ;
+			int timeBudget12 = (int) (1.2f * (float) baseTime * 1000) ;
 			
-			runAlgorithms("RT12",lev,"agent1",timeBudget12,repeatNumberPerRun) ;
-		}		
+			runAlgorithms("RT12",lev,"agent0",timeBudget12,repeatNumberPerRun) ;
+		}	
+		long totTime = (System.currentTimeMillis()  - t0)/1000 ;
+		System.out.println(">>>> TOT experiment time: " + totTime + " secs") ;
+		labRecruitsBinding.close();
 	}
 	
 	//@Test
