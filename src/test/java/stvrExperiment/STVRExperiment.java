@@ -3,7 +3,9 @@ package stvrExperiment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import static java.nio.file.StandardOpenOption.* ;
 
@@ -33,7 +35,8 @@ public class STVRExperiment {
 	static String dataDir = projectRootDir + "/data" ;
 	
 	static String[] availableAlgorithms = { 
-			  "Evo"
+			  "Random"
+			,  "Evo"
 			, "MCTS"
 			, "Q"
 	} ;
@@ -62,8 +65,8 @@ public class STVRExperiment {
 		} ;
 	
 	
-	static int repeatNumberPerRun = 10 ;
-	//static int repeatNumberPerRun = 2 ;
+	//static int repeatNumberPerRun = 10 ;
+	static int repeatNumberPerRun = 2 ;
 
 	static int[] randomSeeds = { 
 			   13, 3713, 255, 24, 999,
@@ -211,7 +214,7 @@ public class STVRExperiment {
 	Result1 runAlgortihm(String algorithmName,
 			int levelNr, 
 			String agentId,
-			int rndSeed,
+			int runNumber,
 			int timeBudget,
 			String dirToSaveResult) throws Exception {
 		String level = targetLevels[levelNr] ;
@@ -219,6 +222,7 @@ public class STVRExperiment {
 		var referenceLogic = LRconnectionLogic.parseConnections(levelFile) ;
 		
 		// instantiate the algorithm:
+		int rndSeed = randomSeeds[runNumber] ;
 		var alg = createAnAlgorithm(algorithmName,levelNr,agentId,rndSeed,timeBudget) ;
 		// run the algorithm:
 		long t0 = System.currentTimeMillis() ;
@@ -240,7 +244,7 @@ public class STVRExperiment {
 		// write the result to a result file:
 		System.out.println(R.toString()) ;
 		String resultFileName = level + "_" + algorithmName + "_result.txt" ;	
-		writelnToFile(dirToSaveResult,resultFileName,"==================",true) ;
+		writelnToFile(dirToSaveResult,resultFileName,"================== run " + runNumber + ":", true) ;
 		writelnToFile(dirToSaveResult,resultFileName,R.toString(),true) ;
 		return R ;
 	}
@@ -289,9 +293,9 @@ public class STVRExperiment {
 			// iterate over the algorithms: Evo/MCTS/Q
 			String algName = availableAlgorithms[a] ;
 			algresults.clear();
-			for (int k=0; k<numberOfRepeat; k++) { 
+			for (int runNumber=0; runNumber<numberOfRepeat; runNumber++) { 
 			    // repeated runs
-				var R = runAlgortihm(algName,levelNr,agentId,randomSeeds[k],timeBudget,dir) ;
+				var R = runAlgortihm(algName,levelNr,agentId,runNumber,timeBudget,dir) ;
 				algresults.add(R) ;
 			}
 			writeResultsToFile(level,algName,dir,resultFileName,algresults) ;
@@ -304,8 +308,17 @@ public class STVRExperiment {
 	 * (the name "12"  refer to this 1.2).
 	 */
 	public void runExperiment12_Test() throws Exception {
-		launchLabRcruits() ;
 		String experimentName = "RT12" ;
+		String dir = Paths.get(dataDir, experimentName).toString() ;
+		String resultFileName = experimentName + "_results.txt" ;
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
+		LocalDateTime now = LocalDateTime.now();  
+		System.out.println(dtf.format(now));  	
+		writelnToFile(dir,resultFileName,">>>> START experiment " + experimentName
+				+ dtf.format(now),
+				true) ;	
+	 
+		launchLabRcruits() ;
 		long t0 = System.currentTimeMillis() ;
 		for (var lev=0; lev<targetLevels.length; lev++) {
 			var level = targetLevels[lev] ;
@@ -316,10 +329,8 @@ public class STVRExperiment {
 			runAlgorithms(experimentName,lev,"agent0",timeBudget12,repeatNumberPerRun) ;
 		}	
 		long totTime = (System.currentTimeMillis()  - t0)/1000 ;
-		String dir = Paths.get(dataDir, experimentName).toString() ;
-		String resultFileName = experimentName + "_results.txt" ;
 		writelnToFile(dir,resultFileName,"*********************",true) ;	
-		writelnToFile(dir,resultFileName,">>>> TOT experiment time: " + totTime + " secs",true) ;
+		writelnToFile(dir,resultFileName,">>>> END experiment. Tot. time: " + totTime + " secs",true) ;
 		labRecruitsBinding.close();
 	}
 	
