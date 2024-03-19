@@ -356,6 +356,7 @@ public class MCTS extends BaseSearchAlgorithm {
 			leaf.terminal = true ;
 			leaf.fullyExplored = true ;
 			runPath(leaf,true) ;
+			totNumberOfRuns++ ;
 			var R = rewardOfCurrentGameState() ;
 			leaf.backPropagate(R);
 			// the case when the state after this node is a winning state:
@@ -370,6 +371,7 @@ public class MCTS extends BaseSearchAlgorithm {
 		if (leaf.numberOfPlays == 0) {
 			System.out.println(">>> ROLLOUT") ;
 			var R = rollout(leaf) ;
+			totNumberOfRuns++ ;
 			leaf.backPropagate(R.reward) ;
 			if (singleSearchMode && R.reward >= maxReward) {
 				winningplay = R.trace ;

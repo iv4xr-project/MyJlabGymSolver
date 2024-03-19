@@ -62,10 +62,9 @@ public class STVRExperiment {
 		} ;
 	
 	
-	//static int repeatNumberPerRun = 10 ;
-	static int repeatNumberPerRun = 2 ;
-	//static int repeatNumberPerRunGroup2 = 3 ;
-	static int repeatNumberPerRunGroup2 = 2 ;
+	static int repeatNumberPerRun = 10 ;
+	//static int repeatNumberPerRun = 2 ;
+
 	static int[] randomSeeds = { 
 			   13, 3713, 255, 24, 999,
 			   4919, 1023, 1, 100, 10001 }  ;
@@ -84,6 +83,7 @@ public class STVRExperiment {
 		int connectionsInferred ;
 		int correctConnections ;
 		int wrongConnections ;
+		int numberOfEpisodes ;
 		
 		@Override
 		public String toString() {
@@ -91,6 +91,7 @@ public class STVRExperiment {
 			z +=     "\n== alg:" + alg ;
 			z +=     "\n== goal:" + (goalsolved ? "ACHIEVED" : "X") ;
 			z +=     "\n== runtime(sec):" + runtime ;
+			z +=     "\n== #episodes:" + numberOfEpisodes ;
 			z +=     "\n== #connections:" + numberOfConnections ;
 			z +=     "\n== #inferred:"    + connectionsInferred ;
 			z +=     "\n== #correct:"     + correctConnections ;
@@ -105,6 +106,12 @@ public class STVRExperiment {
 	
 	static float avrgRuntime(List<Result1> rss) {
 		double a = rss.stream().map(r -> (double) r.runtime).collect(Collectors
+							  .averagingDouble(t -> t)) ;
+		return (float) a ;
+	}
+	
+	static float avrgNumberOfEpisodes(List<Result1> rss) {
+		double a = rss.stream().map(r -> (double) r.numberOfConnections).collect(Collectors
 							  .averagingDouble(t -> t)) ;
 		return (float) a ;
 	}
@@ -229,6 +236,7 @@ public class STVRExperiment {
 		R.connectionsInferred = Z.get("#inferred") ;
 		R.correctConnections = Z.get("#correct") ;
 		R.wrongConnections = Z.get("#wrong") ;
+		R.numberOfEpisodes = alg.algorithm.totNumberOfRuns ;
 		// write the result to a result file:
 		System.out.println(R.toString()) ;
 		String resultFileName = level + "_" + algorithmName + "_result.txt" ;	
@@ -250,6 +258,7 @@ public class STVRExperiment {
 		System.out.println("*********************") ;
 		writelnToFile(dir,resultFileName, "====== " + levelName + " with " + algName, true) ;
 		writelnToFile(dir,resultFileName, "== avrg runtime:" + avrgRuntime(algresults), true) ;
+		writelnToFile(dir,resultFileName, "== avrg #episodes:" + avrgNumberOfEpisodes(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== #solved:" + numbeOfTimesGoalSolved(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== #connections:" + referenceLogic.size(), true) ;
 		writelnToFile(dir,resultFileName, "== #inferred:" + avrgInferredConnections(algresults), true) ;
@@ -290,8 +299,13 @@ public class STVRExperiment {
 	}
 	
 	@Test
-	public void runExpeiment12_Test() throws Exception {
+	/**
+	 * Run the algorithms on the target levels with 1.2x time budget of Samira's algorithm.
+	 * (the name "12"  refer to this 1.2).
+	 */
+	public void runExperiment12_Test() throws Exception {
 		launchLabRcruits() ;
+		String experimentName = "RT12" ;
 		long t0 = System.currentTimeMillis() ;
 		for (var lev=0; lev<targetLevels.length; lev++) {
 			var level = targetLevels[lev] ;
@@ -299,10 +313,13 @@ public class STVRExperiment {
 			
 			int timeBudget12 = (int) (1.2f * (float) baseTime * 1000) ;
 			
-			runAlgorithms("RT12",lev,"agent0",timeBudget12,repeatNumberPerRun) ;
+			runAlgorithms(experimentName,lev,"agent0",timeBudget12,repeatNumberPerRun) ;
 		}	
 		long totTime = (System.currentTimeMillis()  - t0)/1000 ;
-		System.out.println(">>>> TOT experiment time: " + totTime + " secs") ;
+		String dir = Paths.get(dataDir, experimentName).toString() ;
+		String resultFileName = experimentName + "_results.txt" ;
+		writelnToFile(dir,resultFileName,"*********************",true) ;	
+		writelnToFile(dir,resultFileName,">>>> TOT experiment time: " + totTime + " secs",true) ;
 		labRecruitsBinding.close();
 	}
 	

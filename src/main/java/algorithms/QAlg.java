@@ -248,6 +248,7 @@ public class QAlg extends BaseSearchAlgorithm {
 			}
 			totEpisodeAward += episodeAward ;
 			numOfEpisodes++ ;
+			totNumberOfRuns++ ;
 			long duration = System.currentTimeMillis() - time2 ;
 			remainingSearchBudget = remainingSearchBudget - (int) duration ;
 		}

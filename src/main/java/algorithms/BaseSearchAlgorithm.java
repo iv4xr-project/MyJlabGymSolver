@@ -112,7 +112,12 @@ public class BaseSearchAlgorithm {
 	// FRAGILE!
 	WorldEntity lastInteractedButton = null;
 
-	
+	/**
+	 * Just for collecting statistics. It represents the total number of "runs" the algorithm
+	 * does. With "runs" being loosely defined. For the Random algorithm implemented
+	 * here, ut is the total number of pairs door-button tried.
+	 */
+	public int totNumberOfRuns = 0 ;
 
     BaseSearchAlgorithm() { }
     
@@ -388,6 +393,7 @@ public class BaseSearchAlgorithm {
 			WorldEntity B0 = buttons.get(rnd.nextInt(buttons.size())) ;
 			WorldEntity D0 = doors.get(rnd.nextInt(doors.size())) ;
 			checkButtonDoorPair(B0.id,D0.id,budget_per_task) ;
+			totNumberOfRuns++ ;
 			long duration = System.currentTimeMillis() - t1 ;
 			this.remainingSearchBudget = this.remainingSearchBudget - (int) duration ;
 			p++ ;

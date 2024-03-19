@@ -257,6 +257,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 			List<String> tau = new LinkedList<>() ; 
 			tau.add(B) ;
 			myPopulation.add(fitnessValue(tau));
+			totNumberOfRuns++ ;
 			if (isTopGoalSolved()) break ;	
 		}
 		
@@ -340,6 +341,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 				continue ;
 			}
 			var info = fitnessValue(tau) ;
+			totNumberOfRuns++ ;
 			myPopulation.add(info);
 			if (isTopGoalSolved()) 
 				// found a solution!
