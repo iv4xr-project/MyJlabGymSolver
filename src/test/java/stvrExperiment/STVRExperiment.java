@@ -24,6 +24,7 @@ import game.LabRecruitsTestServer;
 import game.Platform;
 import gameTestingContest.MyConfig;
 import gameTestingContest.MyTestingAI;
+import leveldefUtil.LRFloorMap;
 import leveldefUtil.LRconnectionLogic;
 
 public class STVRExperiment {
@@ -45,12 +46,12 @@ public class STVRExperiment {
 	static String[] targetLevels = { 
 			"BM2021_diff1_R3_1_1_H"   // minimum solution: 2
 			,"BM2021_diff1_R4_1_1"    // minimum solution: 4
-			,"BM2021_diff1_R4_1_1_M"  // minimum solution: 3
-			,"BM2021_diff2_R5_2_2_M"  // minimum solution: 2
-			,"BM2021_diff2_R7_2_2"    // minimum solution: 4
-			,"BM2021_diff3_R4_2_2"    // minimum solution: 0
-			,"BM2021_diff3_R4_2_2_M"  // minimum solution: 4
-			,"BM2021_diff3_R7_3_3" // minimum solution: 2
+			//,"BM2021_diff1_R4_1_1_M"  // minimum solution: 3
+			//,"BM2021_diff2_R5_2_2_M"  // minimum solution: 2
+			//,"BM2021_diff2_R7_2_2"    // minimum solution: 4
+			//,"BM2021_diff3_R4_2_2"    // minimum solution: 0
+			//,"BM2021_diff3_R4_2_2_M"  // minimum solution: 4
+			//,"BM2021_diff3_R7_3_3" // minimum solution: 2
 	} ;
 	// Durk, Sanctuary too?
 	
@@ -87,6 +88,7 @@ public class STVRExperiment {
 		int correctConnections ;
 		int wrongConnections ;
 		int numberOfEpisodes ;
+		float areaCoverage ;
 		
 		@Override
 		public String toString() {
@@ -99,6 +101,7 @@ public class STVRExperiment {
 			z +=     "\n== #inferred:"    + connectionsInferred ;
 			z +=     "\n== #correct:"     + correctConnections ;
 			z +=     "\n== #wrong:"       + wrongConnections ;
+			z +=     "\n== area-cov:"     + areaCoverage ;
 			return z ;
 		}
 	}
@@ -133,6 +136,12 @@ public class STVRExperiment {
 	
 	static float avrgWrong(List<Result1> rss) {
 		double a = rss.stream().map(r -> (double) r.wrongConnections).collect(Collectors
+							  .averagingDouble(t -> t)) ;
+		return (float) a ;
+	}
+	
+	static float avrgAreaCoverage(List<Result1> rss) {
+		double a = rss.stream().map(r -> (double) r.areaCoverage).collect(Collectors
 							  .averagingDouble(t -> t)) ;
 		return (float) a ;
 	}
@@ -220,6 +229,7 @@ public class STVRExperiment {
 		String level = targetLevels[levelNr] ;
 		String levelFile = Paths.get(levelsDir, level + ".csv").toString() ;
 		var referenceLogic = LRconnectionLogic.parseConnections(levelFile) ;
+		var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ;
 		
 		// instantiate the algorithm:
 		int rndSeed = randomSeeds[runNumber] ;
@@ -241,6 +251,9 @@ public class STVRExperiment {
 		R.correctConnections = Z.get("#correct") ;
 		R.wrongConnections = Z.get("#wrong") ;
 		R.numberOfEpisodes = alg.algorithm.totNumberOfRuns ;
+		// calculate area coverage:
+		int covered = (int) alg.algorithm.coveredTiles2D.stream().filter(tile -> walkableTiles.contains(tile)).count() ;
+		R.areaCoverage = (float) covered / (float) walkableTiles.size() ;
 		// write the result to a result file:
 		System.out.println(R.toString()) ;
 		String resultFileName = level + "_" + algorithmName + "_result.txt" ;	
@@ -268,6 +281,7 @@ public class STVRExperiment {
 		writelnToFile(dir,resultFileName, "== #inferred:" + avrgInferredConnections(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== #correct:" + avrgCorrect(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== #wrong:" + avrgWrong(algresults), true) ;
+		writelnToFile(dir,resultFileName, "== area-cov:" + avrgAreaCoverage(algresults), true) ;
 	}
 	
 	/**

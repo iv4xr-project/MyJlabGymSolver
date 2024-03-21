@@ -117,7 +117,6 @@ public class MyTestingAI {
 			   LabRecruitsTestAgent agent = agentConstructor.apply(null) ;
 			   Thread.sleep(500) ;
 			   algorithm = new AlgorithmOne(agent) ; 
-			   algorithm.runAlgorithm() ;
 			   break ;		   
 			   
 		   case "Random" :	   
@@ -125,7 +124,6 @@ public class MyTestingAI {
 			   agent = agentConstructor.apply(null) ;
 			   Thread.sleep(500) ;
 			   algorithm = new BaseSearchAlgorithm(agent) ;
-			   algorithm.runAlgorithm() ;
 			   break ; 			   
 		}
 		

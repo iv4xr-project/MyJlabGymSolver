@@ -59,6 +59,24 @@ public class BaseSearchAlgorithm {
 	 */
 	int remainingSearchBudget ;
 	
+	/**
+	 * For keeping track of spatial coverage. For now this assumes that the level has
+	 * just one floor. So, we ignore the y-coordinate of the agent position. The first
+	 * floor is though to be divided into 1x1-tiles, with center at the location
+	 * (x,-,y) where (x,y) is a whole integer. So, the tile would have (x - 0.5, -, y - 0.5)
+	 * bottom-left corner, and (x + 0.5, -, y + 0.5) to right corner.
+	 * 
+	 * <p>The tile is covered by the agent, if the agent current location p in is inside the 
+	 * tile. 
+	 */
+	public Set<Pair<Integer,Integer>> coveredTiles2D = new HashSet<>() ;
+	
+	/**
+	 * For the purpose of calculating area coverage ({@see #coveredTiles2D}), we pretend the
+	 * agent to be a rectangle of size 2 x assumedExtentOfAgent.
+	 */
+	public float assumedExtentOfAgent = 1 ;
+	
 	
 	public int getTotalSearchBudget() { 
 		return totalSearchBudget ;
@@ -174,6 +192,31 @@ public class BaseSearchAlgorithm {
 		return false ;
 	}
 	
+	
+	Pair<Integer,Integer> get2DTileLocation(Vec3 p) {
+		int x = (int) Math.floor(p.x + 0.5) ;
+		int y = (int) Math.floor(p.z + 0.5) ;
+		return new Pair<>(x,y) ;
+	}
+	
+	Set<Pair<Integer,Integer>> get2DTilesAroundAgent(Vec3 p) {
+		Set<Pair<Integer,Integer>> S = new HashSet<>() ;
+		S.add(get2DTileLocation(p)) ;
+		float xMin = p.x - assumedExtentOfAgent ;
+		float xMax = p.x + assumedExtentOfAgent ;
+		float yMin = p.z - assumedExtentOfAgent ;
+		float yMax = p.z + assumedExtentOfAgent ;
+		float x = xMin ;
+		while (x < xMax) {
+			float y = yMin ;
+			while (y < yMax) {
+				S.add(new Pair<Integer,Integer>((int) x, (int) y)) ;
+				y += 1f ;
+			}
+			x += 1f ;
+		}
+		return S ;
+	}
 
 	/**
 	 * Assign the given goal-structure to the test-agent and runs the agent to solve this goal.
@@ -213,7 +256,17 @@ public class BaseSearchAlgorithm {
 				DebugUtil.log("*** Goal-level budget (" + budget + " turns) is EXHAUSTED.") ;
 				break ;
 			}
-			DebugUtil.log("*** " + turn + ", " + agent.getState().id + " @" + agent.getState().worldmodel.position);
+			var pos = agent.getState().worldmodel.position ;
+			DebugUtil.log("*** " + turn + ", " + agent.getState().id + " @" + pos);
+			// track the covered 2D-tile: 
+			// Important: the tarcker assumes we only have 1 flat floor in the level
+			if (pos != null) {
+				if (assumedExtentOfAgent <= 0.5)
+					coveredTiles2D.add(get2DTileLocation(pos)) ;
+				else {
+					coveredTiles2D.addAll(get2DTilesAroundAgent(pos)) ;
+				}
+			}
 			Thread.sleep(50);
 			i++; turn++ ;
 			agent.update();
