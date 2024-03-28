@@ -60,22 +60,21 @@ public class BaseSearchAlgorithm {
 	int remainingSearchBudget ;
 	
 	/**
-	 * For keeping track of spatial coverage. For now this assumes that the level has
-	 * just one floor. So, we ignore the y-coordinate of the agent position. The first
-	 * floor is though to be divided into 1x1-tiles, with center at the location
-	 * (x,-,y) where (x,y) is a whole integer. So, the tile would have (x - 0.5, -, y - 0.5)
-	 * bottom-left corner, and (x + 0.5, -, y + 0.5) to right corner.
-	 * 
-	 * <p>The tile is covered by the agent, if the agent current location p in is inside the 
-	 * tile. 
+	 * Contain the locations visited by the agent during the search.
 	 */
-	public Set<Pair<Integer,Integer>> coveredTiles2D = new HashSet<>() ;
+	public List<Vec3> visitedLocations = new LinkedList<>() ;
 	
 	/**
 	 * For the purpose of calculating area coverage ({@see #coveredTiles2D}), we pretend the
 	 * agent to be a rectangle of size 2 x assumedExtentOfAgent.
 	 */
 	public float assumedExtentOfAgent = 1 ;
+	
+	/**
+	 * The delay (in ms) added between the agent's update cycles when executing a goal,
+	 * in {@link #solveGoal(String, GoalStructure, int)}. The default is 50ms.
+	 */
+	public int delayBetweenAgentUpateCycles = 50 ;
 	
 	
 	public int getTotalSearchBudget() { 
@@ -258,16 +257,9 @@ public class BaseSearchAlgorithm {
 			}
 			var pos = agent.getState().worldmodel.position ;
 			DebugUtil.log("*** " + turn + ", " + agent.getState().id + " @" + pos);
-			// track the covered 2D-tile: 
-			// Important: the tarcker assumes we only have 1 flat floor in the level
-			if (pos != null) {
-				if (assumedExtentOfAgent <= 0.5)
-					coveredTiles2D.add(get2DTileLocation(pos)) ;
-				else {
-					coveredTiles2D.addAll(get2DTilesAroundAgent(pos)) ;
-				}
-			}
-			Thread.sleep(50);
+			// track locations visited by the agent:
+			visitedLocations.add(pos) ;
+			Thread.sleep(delayBetweenAgentUpateCycles);
 			i++; turn++ ;
 			agent.update();
 			// register newly found game-objects:
@@ -466,6 +458,34 @@ public class BaseSearchAlgorithm {
 		else {
 			System.out.println(topGoalPredicate.test(getBelief()) ? "ACHIEVED" : "NOT-achieved") ;
 		}
+	}
+	
+	/**
+	 * For keeping track of spatial coverage. 
+	 *
+	 * <p>The method returns the set of tiles visited by the agent during it search
+	 * {@link #runAlgorithm()}.
+	 * For now, the method assumes that the searched LR level has
+	 * just one floor. So, we ignore the y-coordinate of the agent position. The first
+	 * floor is though to be divided into 1x1-tiles, with center at the location
+	 * (x,-,y) where (x,y) is a whole integer. So, the tile would have (x - 0.5, -, y - 0.5)
+	 * bottom-left corner, and (x + 0.5, -, y + 0.5) to right corner.
+	 * 
+	 * <p>The tile is covered by the agent, if the agent current location p in is inside the 
+	 * tile. 
+	 */
+	public Set<Pair<Integer,Integer>> getCoveredTiles2D() {		
+		Set<Pair<Integer,Integer>> covered = new HashSet<>() ;
+		for (var pos : visitedLocations) {
+			if (pos != null) {
+				if (assumedExtentOfAgent <= 0.5)
+					covered.add(get2DTileLocation(pos)) ;
+				else {
+					covered.addAll(get2DTilesAroundAgent(pos)) ;
+				}
+			}
+		}
+		return covered ;	
 	}
 
 }

@@ -1,5 +1,7 @@
 package gameTestingContest;
 
+import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+
 public class MyConfig {
 	
 	static public boolean DEBUG_MODE = false ;
@@ -49,5 +51,11 @@ public class MyConfig {
 	 * agent's update cycles.
 	 */
 	static public int explorationBudget = 150 ;
+	
+	/**
+	 * The delay (in ms) added between the agent's update cycles when executing a goal. 
+	 * The default is 50ms.
+	 */
+	static public int delayBetweenAgentUpateCycles = 50 ;
 	
 }

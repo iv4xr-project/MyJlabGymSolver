@@ -31,19 +31,19 @@ public class STVRExperiment {
 	
 	static String projectRootDir = System.getProperty("user.dir") ;
 	
-	static String levelsDir = projectRootDir + "/src/test/resources/levels/contest";
+	static String levelsDir = projectRootDir + "/src/test/resources/levels/STVR";
 	
 	static String dataDir = projectRootDir + "/data" ;
 	
 	static String[] availableAlgorithms = { 
-			  "Random"
-			,  "Evo"
-			, "MCTS"
+			// "Random"
+			//,  "Evo"
+			 "MCTS"
 			, "Q"
 	} ;
 		
 	//static String[] targetLevels = { "buttons_doors_1", "samira_8room" } ;
-	static String[] targetLevels = { 
+	static String[] ATEST_levels = { 
 			"BM2021_diff1_R3_1_1_H"   // minimum solution: 2
 			,"BM2021_diff1_R4_1_1"    // minimum solution: 4
 			//,"BM2021_diff1_R4_1_1_M"  // minimum solution: 3
@@ -56,15 +56,38 @@ public class STVRExperiment {
 	// Durk, Sanctuary too?
 	
 	// runtime of Samira's alg, in seconds:
-	static int[] SAruntime = { 
+	static int[] ATEST_SAruntime = { 
 			68, 84, 139, 140, 
 			146, 60, 144, 254 } ;
 	
-	static String[] targetDoors = {
+	static String[] ATEST_targetDoors = {
 			"door1", "door6", "door5", "door4", 
 			"door6", "door6", "door3", "door6"
 		} ;
 	
+	static String[] DDO_levels = { "sanctuary_1"
+			// , "durk_1"
+			} ;
+	static int[] DDO_SAruntime = { 1492, 2680 } ;
+	static String[] DDO_targetDoors = { "DoorEntrance", "DoorKey4",  } ;
+
+	
+	static String[] LargeRandom_levels = { "FBK_largerandom_R9", 
+	  "FBK_largerandom_R9", "FBK_largerandom_R9", "FBK_largerandom_R9",  "FBK_largerandom_R9", "FBK_largerandom_R9", 
+	  "FBK_largerandom_R9", "FBK_largerandom_R9", "FBK_largerandom_R9",  "FBK_largerandom_R9", "FBK_largerandom_R9" } ;
+	
+	static int[] LargeRandom_SAruntime = { 14,
+	   113, 954, 1045, 1076, 1827, 
+	   1532, 
+	   10000, // ?? way too long time out
+	   10000, // ?? way too long time out
+	   1400, // time unknown!
+	   1420 			
+	} ;
+	
+	static String[] LargeRandom_targetDoors = {"Door26", 
+	  "Door5", "Door39", "Door33", "Door16", "Door37",
+	  "Door34", "Door3", "Door21", "Door22", "Door38"}  ;
 	
 	//static int repeatNumberPerRun = 10 ;
 	static int repeatNumberPerRun = 2 ;
@@ -83,6 +106,7 @@ public class STVRExperiment {
 		String alg ;
 		int numberOfConnections ;
 		int runtime ;
+		int numberOfTurns ;
 		boolean goalsolved ;
 		int connectionsInferred ;
 		int correctConnections ;
@@ -96,6 +120,7 @@ public class STVRExperiment {
 			z +=     "\n== alg:" + alg ;
 			z +=     "\n== goal:" + (goalsolved ? "ACHIEVED" : "X") ;
 			z +=     "\n== runtime(sec):" + runtime ;
+			z +=     "\n== #turns:" + numberOfTurns ;
 			z +=     "\n== #episodes:" + numberOfEpisodes ;
 			z +=     "\n== #connections:" + numberOfConnections ;
 			z +=     "\n== #inferred:"    + connectionsInferred ;
@@ -116,8 +141,14 @@ public class STVRExperiment {
 		return (float) a ;
 	}
 	
+	static float avrgTurns(List<Result1> rss) {
+		double a = rss.stream().map(r -> (double) r.numberOfTurns).collect(Collectors
+							  .averagingDouble(t -> t)) ;
+		return (float) a ;
+	}
+	
 	static float avrgNumberOfEpisodes(List<Result1> rss) {
-		double a = rss.stream().map(r -> (double) r.numberOfConnections).collect(Collectors
+		double a = rss.stream().map(r -> (double) r.numberOfEpisodes).collect(Collectors
 							  .averagingDouble(t -> t)) ;
 		return (float) a ;
 	}
@@ -177,12 +208,11 @@ public class STVRExperiment {
 	 * <p>The timeBudget is in msec.
 	 */
 	MyTestingAI createAnAlgorithm(String algorithmName, 
-			int levelNr, 
+			String levelName, 
+			String targetDoor,
 			String agentId,
 			int rndSeed,
 			int timeBudget) {
-		
-		String levelName = targetLevels[levelNr] ;
 		
 		// Configure the algorithm:
 		MyConfig.ALG = algorithmName ;
@@ -192,7 +222,7 @@ public class STVRExperiment {
 		MyConfig.agentId = agentId ;
 		MyConfig.randomSeed = rndSeed ;
 		MyConfig.searchbuget = timeBudget ;
-		MyConfig.target = targetDoors[levelNr] ;
+		MyConfig.target = targetDoor ;
 		
 		// config for LR:
 		var config = new LabRecruitsConfig(levelName,levelsDir);        
@@ -220,20 +250,20 @@ public class STVRExperiment {
 	 * to a file and returned as an instance of Result1.
 	 * <p>The timeBudget is in msec.
 	 */
-	Result1 runAlgortihm(String algorithmName,
-			int levelNr, 
+	Result1 runAlgorithm(String algorithmName,
+			String level, 
+			String targetDoor, 
 			String agentId,
 			int runNumber,
+			int rndSeed,
 			int timeBudget,
 			String dirToSaveResult) throws Exception {
-		String level = targetLevels[levelNr] ;
 		String levelFile = Paths.get(levelsDir, level + ".csv").toString() ;
 		var referenceLogic = LRconnectionLogic.parseConnections(levelFile) ;
 		var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ;
 		
 		// instantiate the algorithm:
-		int rndSeed = randomSeeds[runNumber] ;
-		var alg = createAnAlgorithm(algorithmName,levelNr,agentId,rndSeed,timeBudget) ;
+		var alg = createAnAlgorithm(algorithmName,level,targetDoor,agentId,rndSeed,timeBudget) ;
 		// run the algorithm:
 		long t0 = System.currentTimeMillis() ;
 		var discoveredConnections = alg.exploreLRLogic() ;
@@ -244,6 +274,7 @@ public class STVRExperiment {
 		R.alg = algorithmName ;
 		R.level = level ;
 		R.runtime = (int) runtime ;
+		R.numberOfTurns = alg.algorithm.turn ;
 		R.goalsolved = alg.algorithm.isTopGoalSolved() ;
 		var Z = LRconnectionLogic.compareConnection(referenceLogic, discoveredConnections) ;
 		R.numberOfConnections = Z.get("#connections") ;
@@ -252,12 +283,16 @@ public class STVRExperiment {
 		R.wrongConnections = Z.get("#wrong") ;
 		R.numberOfEpisodes = alg.algorithm.totNumberOfRuns ;
 		// calculate area coverage:
-		int covered = (int) alg.algorithm.coveredTiles2D.stream().filter(tile -> walkableTiles.contains(tile)).count() ;
+		int covered = (int) alg.algorithm.getCoveredTiles2D().stream().filter(tile -> walkableTiles.contains(tile)).count() ;
 		R.areaCoverage = (float) covered / (float) walkableTiles.size() ;
 		// write the result to a result file:
 		System.out.println(R.toString()) ;
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
+		LocalDateTime now = LocalDateTime.now();  
 		String resultFileName = level + "_" + algorithmName + "_result.txt" ;	
-		writelnToFile(dirToSaveResult,resultFileName,"================== run " + runNumber + ":", true) ;
+		writelnToFile(dirToSaveResult,resultFileName,"================== run " 
+				+ runNumber + ", " +  dtf.format(now) 
+				+ ":", true) ;
 		writelnToFile(dirToSaveResult,resultFileName,R.toString(),true) ;
 		return R ;
 	}
@@ -275,6 +310,7 @@ public class STVRExperiment {
 		System.out.println("*********************") ;
 		writelnToFile(dir,resultFileName, "====== " + levelName + " with " + algName, true) ;
 		writelnToFile(dir,resultFileName, "== avrg runtime:" + avrgRuntime(algresults), true) ;
+		writelnToFile(dir,resultFileName, "== avrg #turns:" + avrgTurns(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== avrg #episodes:" + avrgNumberOfEpisodes(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== #solved:" + numbeOfTimesGoalSolved(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== #connections:" + referenceLogic.size(), true) ;
@@ -291,12 +327,12 @@ public class STVRExperiment {
 	 */
 	void runAlgorithms(
 			String exerimentName,
-			int levelNr, 
+			String level, 
+			String targetDoor,
 			String agentId, 
 			int timeBudget, 
 			int numberOfRepeat) throws Exception {
 		
-		String level = targetLevels[levelNr] ;
 		String resultFileName = exerimentName + "_results.txt" ;
 		List<Result1> algresults = new LinkedList<>() ;
 		
@@ -309,25 +345,35 @@ public class STVRExperiment {
 			algresults.clear();
 			for (int runNumber=0; runNumber<numberOfRepeat; runNumber++) { 
 			    // repeated runs
-				var R = runAlgortihm(algName,levelNr,agentId,runNumber,timeBudget,dir) ;
+				var R = runAlgorithm(algName,level,targetDoor,agentId,runNumber,randomSeeds[runNumber],timeBudget,dir) ;
 				algresults.add(R) ;
 			}
 			writeResultsToFile(level,algName,dir,resultFileName,algresults) ;
 		}	
 	}
 	
-	@Test
 	/**
-	 * Run the algorithms on the target levels with 1.2x time budget of Samira's algorithm.
-	 * (the name "12"  refer to this 1.2).
+	 * Run the algorithms on a given bench-mark set.
 	 */
-	public void runExperiment12_Test() throws Exception {
-		String experimentName = "RT12" ;
-		String dir = Paths.get(dataDir, experimentName).toString() ;
+	public void runExperiment(
+				String benchmarkSetName,
+				String[] targetLevels,
+				String[] targetDoors,
+				String agentId,
+				int[] base_SARuntime
+			) 
+		throws Exception {
+		String experimentName = benchmarkSetName ;
+		Path dir_ = Paths.get(dataDir, experimentName) ;
+		String dir = dir_.toString() ;
+		// create the dir if it does not exists:
+		if (Files.notExists(dir_)) {
+			Files.createDirectories(dir_) ;
+		}
 		String resultFileName = experimentName + "_results.txt" ;
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
 		LocalDateTime now = LocalDateTime.now();  
-		System.out.println(dtf.format(now));  	
+		//System.out.println(dtf.format(now));  	
 		writelnToFile(dir,resultFileName,">>>> START experiment " + experimentName
 				+ dtf.format(now),
 				true) ;	
@@ -336,11 +382,15 @@ public class STVRExperiment {
 		long t0 = System.currentTimeMillis() ;
 		for (var lev=0; lev<targetLevels.length; lev++) {
 			var level = targetLevels[lev] ;
-			int baseTime = SAruntime[lev] ;
+			int baseTime = base_SARuntime[lev] ;
 			
+			// time budget is specified to 1.2x Samira's alg:
 			int timeBudget12 = (int) (1.2f * (float) baseTime * 1000) ;
 			
-			runAlgorithms(experimentName,lev,"agent0",timeBudget12,repeatNumberPerRun) ;
+			runAlgorithms(experimentName,
+					targetLevels[lev],
+					targetDoors[lev],
+					agentId,timeBudget12,repeatNumberPerRun) ;
 		}	
 		long totTime = (System.currentTimeMillis()  - t0)/1000 ;
 		writelnToFile(dir,resultFileName,"*********************",true) ;	
@@ -349,8 +399,23 @@ public class STVRExperiment {
 	}
 	
 	//@Test
+	public void run_ATEST_experiment_Test() throws Exception {
+		runExperiment("ATEST", ATEST_levels, ATEST_targetDoors, "agent0", ATEST_SAruntime) ;
+	}
+	
+	@Test
+	public void run_DDO_experiment_Test() throws Exception {
+		runExperiment("DDO", DDO_levels, DDO_targetDoors,  "agent1", DDO_SAruntime) ;
+	}
+	
+	// @Test
+	public void run_LarRandom_experiment_Test() throws Exception {
+		runExperiment("LargeRandom", LargeRandom_levels, LargeRandom_targetDoors,  "agent0", LargeRandom_SAruntime) ;
+	}
+	
+	//@Test
 	public void testWriteFile() throws IOException {
-		String level = targetLevels[0] ;
+		String level = ATEST_levels[0] ;
 		String resultfile = level + "_result.txt" ;
 		writelnToFile(dataDir,resultfile,">>> " + LocalTime.now(),true) ;
 		writelnToFile(dataDir,resultfile,"Another line",true) ;

@@ -134,6 +134,7 @@ public class MyTestingAI {
 		algorithm.setTotalSearchBudget(MyConfig.searchbuget) ;
 		algorithm.budget_per_task = MyConfig.budget_per_task ;
 		algorithm.explorationBudget = MyConfig.explorationBudget ;
+		algorithm.delayBetweenAgentUpateCycles = MyConfig.delayBetweenAgentUpateCycles ;
 
 		if (MyConfig.target != null) {
 			if (MyConfig.targetType.equals("door")) {

@@ -1,0 +1,11 @@
+Flag1    ---> Door26
+Flag2    ---> Door5
+Flag3    ---> Door39
+Flag4    ---> Door33
+Flag5    ---> Door16
+Flag6    ---> Door37
+Flag7    ---> Door34
+Flag8    ---> Door3
+Flag9    ---> Door21
+Flag10   ---> Door22
+Flag11   ---> Door38
