@@ -41,7 +41,8 @@ public class STVRExperiment {
 			 "MCTS"
 			, "Q"
 	} ;
-		
+	
+	// ================ ATEST levels =================
 	//static String[] targetLevels = { "buttons_doors_1", "samira_8room" } ;
 	static String[] ATEST_levels = { 
 			"BM2021_diff1_R3_1_1_H"   // minimum solution: 2
@@ -65,13 +66,23 @@ public class STVRExperiment {
 			"door6", "door6", "door3", "door6"
 		} ;
 	
+	static int[] ATEST_episode_length = {
+			5,5,5,5,
+			5,5,5,5
+	} ;
+	
+	// ================ DDO levels =================
+
 	static String[] DDO_levels = { "sanctuary_1"
 			// , "durk_1"
 			} ;
 	static int[] DDO_SAruntime = { 1492, 2680 } ;
 	static String[] DDO_targetDoors = { "DoorEntrance", "DoorKey4",  } ;
-
+	static int[] DDO_episode_length = { 9 , 5 } ;
 	
+
+	// ================ Large-Random level =================
+
 	static String[] LargeRandom_levels = { "FBK_largerandom_R9", 
 	  "FBK_largerandom_R9", "FBK_largerandom_R9", "FBK_largerandom_R9",  "FBK_largerandom_R9", "FBK_largerandom_R9", 
 	  "FBK_largerandom_R9", "FBK_largerandom_R9", "FBK_largerandom_R9",  "FBK_largerandom_R9", "FBK_largerandom_R9" } ;
@@ -88,6 +99,13 @@ public class STVRExperiment {
 	static String[] LargeRandom_targetDoors = {"Door26", 
 	  "Door5", "Door39", "Door33", "Door16", "Door37",
 	  "Door34", "Door3", "Door21", "Door22", "Door38"}  ;
+	
+	static int[] LargeRandom_episode_length = { 2,
+			5 , 6, 8, 11, 15,
+			14, 12, 14, 20, 21
+			
+	    } ;
+
 	
 	//static int repeatNumberPerRun = 10 ;
 	static int repeatNumberPerRun = 2 ;
@@ -212,7 +230,8 @@ public class STVRExperiment {
 			String targetDoor,
 			String agentId,
 			int rndSeed,
-			int timeBudget) {
+			int timeBudget,
+			int episodeLength) {
 		
 		// Configure the algorithm:
 		MyConfig.ALG = algorithmName ;
@@ -223,6 +242,7 @@ public class STVRExperiment {
 		MyConfig.randomSeed = rndSeed ;
 		MyConfig.searchbuget = timeBudget ;
 		MyConfig.target = targetDoor ;
+		MyConfig.solutionLengthUpperBound = episodeLength ;
 		
 		// config for LR:
 		var config = new LabRecruitsConfig(levelName,levelsDir);        
@@ -257,13 +277,14 @@ public class STVRExperiment {
 			int runNumber,
 			int rndSeed,
 			int timeBudget,
+			int episodeLength,
 			String dirToSaveResult) throws Exception {
 		String levelFile = Paths.get(levelsDir, level + ".csv").toString() ;
 		var referenceLogic = LRconnectionLogic.parseConnections(levelFile) ;
 		var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ;
 		
 		// instantiate the algorithm:
-		var alg = createAnAlgorithm(algorithmName,level,targetDoor,agentId,rndSeed,timeBudget) ;
+		var alg = createAnAlgorithm(algorithmName,level,targetDoor,agentId,rndSeed,timeBudget,episodeLength) ;
 		// run the algorithm:
 		long t0 = System.currentTimeMillis() ;
 		var discoveredConnections = alg.exploreLRLogic() ;
@@ -314,9 +335,21 @@ public class STVRExperiment {
 		writelnToFile(dir,resultFileName, "== avrg #episodes:" + avrgNumberOfEpisodes(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== #solved:" + numbeOfTimesGoalSolved(algresults), true) ;
 		writelnToFile(dir,resultFileName, "== #connections:" + referenceLogic.size(), true) ;
-		writelnToFile(dir,resultFileName, "== #inferred:" + avrgInferredConnections(algresults), true) ;
-		writelnToFile(dir,resultFileName, "== #correct:" + avrgCorrect(algresults), true) ;
+		float inferred = avrgInferredConnections(algresults) ;
+		float correct = avrgCorrect(algresults) ;
+		writelnToFile(dir,resultFileName, "== #inferred:" + inferred, true) ;
+		writelnToFile(dir,resultFileName, "== #correct:" + correct, true) ;
 		writelnToFile(dir,resultFileName, "== #wrong:" + avrgWrong(algresults), true) ;
+		float precision = 0 ;
+		float recall = 0 ;
+		if (correct > 0) {
+			precision = correct/inferred ;
+		}
+		if (correct > 0) {
+			recall = correct / (float) referenceLogic.size() ;
+		}
+		writelnToFile(dir,resultFileName, "== precision:" + precision, true) ;
+		writelnToFile(dir,resultFileName, "== recall:" + recall, true) ;
 		writelnToFile(dir,resultFileName, "== area-cov:" + avrgAreaCoverage(algresults), true) ;
 	}
 	
@@ -331,6 +364,7 @@ public class STVRExperiment {
 			String targetDoor,
 			String agentId, 
 			int timeBudget, 
+			int episodeLength,
 			int numberOfRepeat) throws Exception {
 		
 		String resultFileName = exerimentName + "_results.txt" ;
@@ -345,7 +379,7 @@ public class STVRExperiment {
 			algresults.clear();
 			for (int runNumber=0; runNumber<numberOfRepeat; runNumber++) { 
 			    // repeated runs
-				var R = runAlgorithm(algName,level,targetDoor,agentId,runNumber,randomSeeds[runNumber],timeBudget,dir) ;
+				var R = runAlgorithm(algName,level,targetDoor,agentId,runNumber,randomSeeds[runNumber],timeBudget,episodeLength,dir) ;
 				algresults.add(R) ;
 			}
 			writeResultsToFile(level,algName,dir,resultFileName,algresults) ;
@@ -360,7 +394,8 @@ public class STVRExperiment {
 				String[] targetLevels,
 				String[] targetDoors,
 				String agentId,
-				int[] base_SARuntime
+				int[] base_SARuntime,
+				int[] episodeLengths
 			) 
 		throws Exception {
 		String experimentName = benchmarkSetName ;
@@ -390,7 +425,10 @@ public class STVRExperiment {
 			runAlgorithms(experimentName,
 					targetLevels[lev],
 					targetDoors[lev],
-					agentId,timeBudget12,repeatNumberPerRun) ;
+					agentId,timeBudget12,
+					episodeLengths[lev],
+					repeatNumberPerRun
+					) ;
 		}	
 		long totTime = (System.currentTimeMillis()  - t0)/1000 ;
 		writelnToFile(dir,resultFileName,"*********************",true) ;	
@@ -400,17 +438,17 @@ public class STVRExperiment {
 	
 	//@Test
 	public void run_ATEST_experiment_Test() throws Exception {
-		runExperiment("ATEST", ATEST_levels, ATEST_targetDoors, "agent0", ATEST_SAruntime) ;
+		runExperiment("ATEST", ATEST_levels, ATEST_targetDoors, "agent0", ATEST_SAruntime, ATEST_episode_length) ;
 	}
 	
 	@Test
 	public void run_DDO_experiment_Test() throws Exception {
-		runExperiment("DDO", DDO_levels, DDO_targetDoors,  "agent1", DDO_SAruntime) ;
+		runExperiment("DDO", DDO_levels, DDO_targetDoors,  "agent1", DDO_SAruntime, DDO_episode_length) ;
 	}
 	
 	// @Test
 	public void run_LarRandom_experiment_Test() throws Exception {
-		runExperiment("LargeRandom", LargeRandom_levels, LargeRandom_targetDoors,  "agent0", LargeRandom_SAruntime) ;
+		runExperiment("LargeRandom", LargeRandom_levels, LargeRandom_targetDoors,  "agent0", LargeRandom_SAruntime, LargeRandom_episode_length) ;
 	}
 	
 	//@Test
