@@ -115,7 +115,7 @@ public class STVRExperiment {
 			   4919, 1023, 1, 100, 10001 }  ;
 	
 	// Bounding the search depth to this:
-	static int maxSearchDepth = 5 ;
+	// static int maxSearchDepth = 5 ;
 	
 	static LabRecruitsTestServer labRecruitsBinding;
 	
@@ -235,7 +235,7 @@ public class STVRExperiment {
 		
 		// Configure the algorithm:
 		MyConfig.ALG = algorithmName ;
-		MyConfig.solutionLengthUpperBound = maxSearchDepth ;
+		//MyConfig.solutionLengthUpperBound = maxSearchDepth ;
 		MyConfig.budget_per_task = 150 ;
 		MyConfig.explorationBudget = 200 ;
 		MyConfig.agentId = agentId ;
