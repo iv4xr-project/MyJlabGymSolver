@@ -34,6 +34,10 @@ public class OtherInfo {
 			,"FBK_largerandom_R9_cleaned"
 	} ;
 	
+	
+	/**
+	 * Run this to calculate the total area size of the levels in STVR.
+	 */
 	//@Test
 	public void calcAreaSize() throws IOException {
 		for (int k=0; k<all_levels.length; k++) {
@@ -59,41 +63,38 @@ public class OtherInfo {
 	} ;
 	
 	
-	float areaCoverage(String levelFile, String traceFile) throws IOException {
+	float areaCoverage(BaseSearchAlgorithm dummyAlg, String levelFile, String traceFile) throws IOException {
 		var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ;
-		
-		var dummyAgent = new LabRecruitsTestAgent("dummy") ;
-		dummyAgent.attachState(new XBelief()) ;
-		var alg = new BaseSearchAlgorithm(dummyAgent) ;
-		
+				
 		var rows = readCSV(',', traceFile) ;
 		rows.remove(0) ;
 		for (var R : rows) {
 			Vec3 loc = new Vec3(Float.parseFloat(R[0]), Float.parseFloat(R[1]), Float.parseFloat(R[2])) ;
-			alg.visitedLocations.add(loc) ;
+			dummyAlg.visitedLocations.add(loc) ;
 		}
-		int covered = (int) alg.getCoveredTiles2D().stream().filter(tile -> walkableTiles.contains(tile)).count() ;
+		int covered = (int) dummyAlg.getCoveredTiles2D().stream().filter(tile -> walkableTiles.contains(tile)).count() ;
 		float areaCoverage = (float) covered / (float) walkableTiles.size() ;
 		return areaCoverage ;
 	}
 	
 
 
+	/**
+	 * Run this to calculate the physical coverage of onlineSeacrh on ATEST and DDO levels.
+	 * This is calculated using traces Samira produced during her runs.
+	 */
     @Test	
 	public void getAreaCovFromTraces_ATEST_DDO() throws IOException {
 		var tracedir = Paths.get(STVRExperiment.dataDir, "all locations").toString() ;
+		var dummyAgent = new LabRecruitsTestAgent("dummy") ;
+		dummyAgent.attachState(new XBelief()) ;
+		var dummyAlg = new BaseSearchAlgorithm(dummyAgent) ;
 		for (int k=0; k<ATEST_DDO_traces.length; k++) {
 			var lev = all_levels[k] ;
 			String levelFile = Paths.get(STVRExperiment.levelsDir, lev + ".csv").toString() ;
-			var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ;
-			
-			var dummyAgent = new LabRecruitsTestAgent("dummy") ;
-			dummyAgent.attachState(new XBelief()) ;
-			var alg = new BaseSearchAlgorithm(dummyAgent) ;
-			
 			String traceFile = Paths.get(tracedir, ATEST_DDO_traces[k] + ".csv").toString() ;
-
-			System.out.println("** " + lev + ", area-cov: " + areaCoverage(levelFile,traceFile)) ;
+			dummyAlg.visitedLocations.clear();
+			System.out.println("** " + lev + ", area-cov: " + areaCoverage(dummyAlg,levelFile,traceFile)) ;
 		}
 	}
     
@@ -108,23 +109,34 @@ public class OtherInfo {
 			,"FBK-door22"
 			,"FBK-door38"			
 	} ;
-    
+	
+	/**
+	 * Run this to calculate the physical coverage of randomLarge.
+	 * This is calculated using traces Samira produced during her runs.
+	 */  
     @Test	
 	public void getAreaCovFromTraces_RandomLarge() throws IOException {
     	var tracedir = Paths.get(STVRExperiment.dataDir, "all locations").toString() ;
     	String levelFile = Paths.get(STVRExperiment.levelsDir, "FBK_largerandom_R9_cleaned.csv").toString() ;
     	
+    	var dummyAgent = new LabRecruitsTestAgent("dummy") ;
+		dummyAgent.attachState(new XBelief()) ;
+		var dummyAlg1 = new BaseSearchAlgorithm(dummyAgent) ;
+		var dummyAlg2 = new BaseSearchAlgorithm(dummyAgent) ;
+		
+    	
     	for (int k=0; k<R9_traces.length; k++) {
-			var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ;
-			
-			var dummyAgent = new LabRecruitsTestAgent("dummy") ;
-			dummyAgent.attachState(new XBelief()) ;
-			var alg = new BaseSearchAlgorithm(dummyAgent) ;
-			
+			var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ;	
 			String traceFile = Paths.get(tracedir, R9_traces[k] + ".csv").toString() ;
-
-			System.out.println("** " + R9_traces[k] + ", area-cov: " + areaCoverage(levelFile,traceFile)) ;
+			dummyAlg1.visitedLocations.clear();
+			System.out.println("** " + R9_traces[k] + ", area-cov: " + areaCoverage(dummyAlg1,levelFile,traceFile)) ;
+			areaCoverage(dummyAlg2,levelFile,traceFile) ;
 		}
+    	// calculate the total coverage of all traces together:
+    	var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ;
+		int covered = (int) dummyAlg2.getCoveredTiles2D().stream().filter(tile -> walkableTiles.contains(tile)).count() ;
+		float totAreaCoverage = (float) covered / (float) walkableTiles.size() ;
+		System.out.println("** R9 tot area-cov: " + totAreaCoverage) ;
     	
     }
 }
