@@ -3,6 +3,7 @@ package algorithms;
 import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,11 @@ public class BaseSearchAlgorithm {
 	 * The test-agent that will be used to run the exploration algorithm.
 	 */
 	public LabRecruitsTestAgent agent ;
+	
+	/**
+	 * If defined, this closes the SUT.
+	 */
+	public Function <Void,Void> closeSUT ;
 	
 	/**
 	 * Available total search-budget in ms. The default is 3-min.
@@ -458,6 +464,17 @@ public class BaseSearchAlgorithm {
 		else {
 			System.out.println(topGoalPredicate.test(getBelief()) ? "ACHIEVED" : "NOT-achieved") ;
 		}
+		closeEnv() ;
+	}
+	
+	/**
+	 * Close the agen's connection to the SUT. If {@link #closeSUT} is defined,
+	 * it will also be invoked to close the SUT.
+	 */
+	void closeEnv() {
+		agent.env().close() ;
+		if (closeSUT != null)
+			closeSUT.apply(null) ;
 	}
 	
 	/**

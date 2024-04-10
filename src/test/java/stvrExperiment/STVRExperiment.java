@@ -254,6 +254,7 @@ public class STVRExperiment {
         	// create an instance of LabRecruitsEnvironment; it will bind to the
             // Lab Recruits instance you launched above. It will also load the
             // level specified in the passed LR-config:
+        	launchLabRcruits() ;
         	LabRecruitsEnvironment env = new LabRecruitsEnvironment(config);
         	LabRecruitsTestAgent agent = new LabRecruitsTestAgent(agentId) // matches the ID in the CSV file
     				.attachState(new XBelief())
@@ -285,6 +286,15 @@ public class STVRExperiment {
 		
 		// instantiate the algorithm:
 		var alg = createAnAlgorithm(algorithmName,level,targetDoor,agentId,rndSeed,timeBudget,episodeLength) ;
+		
+		alg.algorithm.closeSUT = dummy -> {
+			if (labRecruitsBinding != null) {
+				labRecruitsBinding.close();
+				labRecruitsBinding = null ;
+			}
+			return null ;
+		} ;
+		
 		// run the algorithm:
 		long t0 = System.currentTimeMillis() ;
 		var discoveredConnections = alg.exploreLRLogic() ;
@@ -416,7 +426,6 @@ public class STVRExperiment {
 		launchLabRcruits() ;
 		long t0 = System.currentTimeMillis() ;
 		for (var lev=0; lev<targetLevels.length; lev++) {
-			var level = targetLevels[lev] ;
 			int baseTime = base_SARuntime[lev] ;
 			
 			// time budget is specified to 1.2x Samira's alg:
@@ -436,19 +445,34 @@ public class STVRExperiment {
 		labRecruitsBinding.close();
 	}
 	
+	void hitReturnToContinue() {
+		System.out.println(">>>> hit RETURN to continue") ;
+		Scanner scanner = new Scanner(System.in);
+		scanner.nextLine() ;
+		//scanner.close();
+	}
+	
 	//@Test
+	public void test_launch_and_close_LR() {
+		launchLabRcruits() ;
+		hitReturnToContinue() ;
+		labRecruitsBinding.close(); 
+		hitReturnToContinue() ;
+	}
+	
+	@Test
 	public void run_ATEST_experiment_Test() throws Exception {
 		runExperiment("ATEST", ATEST_levels, ATEST_targetDoors, "agent0", ATEST_SAruntime, ATEST_episode_length) ;
 	}
 	
-	@Test
+	//@Test
 	public void run_DDO_experiment_Test() throws Exception {
 		runExperiment("DDO", DDO_levels, DDO_targetDoors,  "agent1", DDO_SAruntime, DDO_episode_length) ;
 	}
 	
 	// @Test
 	public void run_LarRandom_experiment_Test() throws Exception {
-		runExperiment("LargeRandom", LargeRandom_levels, LargeRandom_targetDoors,  "agent0", LargeRandom_SAruntime, LargeRandom_episode_length) ;
+		runExperiment("LargeRandom", LargeRandom_levels, LargeRandom_targetDoors,  "agent1", LargeRandom_SAruntime, LargeRandom_episode_length) ;
 	}
 	
 	//@Test

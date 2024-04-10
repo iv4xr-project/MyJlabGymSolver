@@ -86,6 +86,10 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	
 	public Population myPopulation = new Population() ;
 	
+	/**
+	 * Create an agent, with a state, and connected to the SUT. The function may
+	 * also re-launch the SUT (you decide).
+	 */
 	Function <Void,LabRecruitsTestAgent> agentConstructor ;
 	
 	Evolutionary() { 
@@ -445,10 +449,6 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		Thread.sleep(500) ;
 	}
 	
-	void closeEnv() {
-		agent.env().close() ;
-	}
-	
 	/**
 	 * Calculate the fitness-value of the chromosome. This is done by converting
 	 * the chromosome to a sequence of goals, and have an agent to execute it. 
@@ -457,7 +457,12 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 * 
 	 */
 	ChromosomeInfo fitnessValue(List<String> chromosome) throws Exception {
+		var t0 = System.currentTimeMillis() ;
 		instantiateAgent() ;
+		var duration = System.currentTimeMillis() - t0 ;
+		// add this back to the time accounting, as we won't count LR initialization as exec-time:
+		this.remainingSearchBudget += (int) duration ;
+		
 		System.out.println(">>> evaluating chromosome: " + chromosome);
 		
 		boolean goalPredicateSolved = false ;

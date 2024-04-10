@@ -46,7 +46,12 @@ public class QAlg extends BaseSearchAlgorithm {
 	List<String> trace = new LinkedList<>() ;
 	String compressedTrace = "" ;
 	
+	/**
+	 * Create an agent, with a state, and connected to the SUT. The function may
+	 * also re-launch the SUT (you decide).
+	 */
 	Function <Void,LabRecruitsTestAgent> agentConstructor ;
+
 	
 	QAlg() { }
 	
@@ -101,7 +106,11 @@ public class QAlg extends BaseSearchAlgorithm {
 	
 	float playEpisode() throws Exception {
 		
+		var t0 = System.currentTimeMillis() ;
 		instantiateAgent() ;
+		var duration = System.currentTimeMillis() - t0 ;
+		// add this back to the time accounting, as we won't count LR initialization as exec-time:
+		this.remainingSearchBudget += (int) duration ;
 		
 		clearTrace() ;
 		
@@ -230,6 +239,7 @@ public class QAlg extends BaseSearchAlgorithm {
 					           + alpha * (reward + gamma * S_maxNextReward) ;
 			
 		}
+		closeEnv() ;
 		return totalEpisodeReward ;
 	}
 	

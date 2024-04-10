@@ -169,7 +169,8 @@ public class MyTestingAI {
 			e.printStackTrace() ;
 		}
 		
-		algorithm.agent.env().close() ;
+		// Now this is the algorithm's reponsibility, in the method runAlgorithm()
+		//algorithm.agent.env().close() ;
 
 		DebugUtil.pressEnter();
 		return algorithm.getDiscoveredConnections() ;

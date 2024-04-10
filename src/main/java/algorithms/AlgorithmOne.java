@@ -150,6 +150,7 @@ public class AlgorithmOne extends BaseSearchAlgorithm {
 	@Override
 	public void runAlgorithm() throws Exception {
 		search() ;
+		closeEnv() ;
 	}
 	
 

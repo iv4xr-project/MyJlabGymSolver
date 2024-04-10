@@ -126,6 +126,10 @@ public class MCTS extends BaseSearchAlgorithm {
 		float reward ;	
 	}
 	
+	/**
+	 * Create an agent, with a state, and connected to the SUT. The function may
+	 * also re-launch the SUT (you decide).
+	 */
 	Function <Void,LabRecruitsTestAgent> agentConstructor ;
 	
 	/**
@@ -165,17 +169,16 @@ public class MCTS extends BaseSearchAlgorithm {
 		Thread.sleep(500) ;
 	}
 	
-	void closeEnv() {
-		agent.env().close() ;
-	}
-	
 	/**
 	 * Execute all the actions in the path towards and until the given node. The method
 	 * returns true if the whole sequence can be executed, and else false.
 	 */
 	boolean runPath(Node node, boolean closeEnvAtTheEnd) throws Exception {
-		
+		var t0 = System.currentTimeMillis() ;
 		instantiateAgent() ;
+		var duration = System.currentTimeMillis() - t0 ;
+		// add this back to the time accounting, as we won't count LR initialization as exec-time:
+		this.remainingSearchBudget += (int) duration ;
 		
 		var trace = node.getTraceLeadingToThisNode() ;
 
@@ -290,8 +293,7 @@ public class MCTS extends BaseSearchAlgorithm {
 		R.trace = trace ;
 		R.reward = rewardOfCurrentGameState() ;
 		closeEnv();
-		return R ;
-		
+		return R ;	
 	}
 		
 	List<Node> generateChildren(Node node) throws Exception {
@@ -306,6 +308,7 @@ public class MCTS extends BaseSearchAlgorithm {
 				children.add(child) ;
 			}
 		}
+		closeEnv() ;
 		return children ;
 	}
 	
@@ -364,6 +367,7 @@ public class MCTS extends BaseSearchAlgorithm {
 				winningplay = leaf.getTraceLeadingToThisNode() ;
 				discoveredConnections = getBelief().getConnections()  ;
 			}
+			closeEnv() ;
 			return ;			
 		}
 		
