@@ -28,6 +28,10 @@ public class MyTestingAI {
 	 */
 	public Function<Void,LabRecruitsTestAgent> agentConstructor = null ;
 	
+	/**
+	 * If defined, this closes the SUT.
+	 */
+	public Function <Void,Void> closeSUT ;
 	
 	/**
 	 * The used search-algorithm.
@@ -130,11 +134,12 @@ public class MyTestingAI {
 		if (MyConfig.randomSeed != null) {
 			algorithm.setRndSeed(MyConfig.randomSeed) ;
 		}
-
+		
 		algorithm.setTotalSearchBudget(MyConfig.searchbuget) ;
 		algorithm.budget_per_task = MyConfig.budget_per_task ;
 		algorithm.explorationBudget = MyConfig.explorationBudget ;
 		algorithm.delayBetweenAgentUpateCycles = MyConfig.delayBetweenAgentUpateCycles ;
+		algorithm.closeSUT = this.closeSUT ;
 
 		if (MyConfig.target != null) {
 			if (MyConfig.targetType.equals("door")) {

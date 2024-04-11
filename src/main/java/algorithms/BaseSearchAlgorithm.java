@@ -470,11 +470,18 @@ public class BaseSearchAlgorithm {
 	/**
 	 * Close the agen's connection to the SUT. If {@link #closeSUT} is defined,
 	 * it will also be invoked to close the SUT.
+	 * @throws InterruptedException 
 	 */
-	void closeEnv() {
+	void closeEnv() throws InterruptedException {
+		var t0 = System.currentTimeMillis() ;
 		agent.env().close() ;
-		if (closeSUT != null)
+		if (closeSUT != null) {
 			closeSUT.apply(null) ;
+		}
+		Thread.sleep(3000);
+		var duration = System.currentTimeMillis() - t0 ;
+		// add this back to the time accounting, as we won't count LR closing as exec-time:
+		this.remainingSearchBudget += (int) duration ;		
 	}
 	
 	/**

@@ -36,7 +36,7 @@ public class STVRExperiment {
 	static String dataDir = projectRootDir + "/data" ;
 	
 	static String[] availableAlgorithms = { 
-			// "Random"
+			//"Random"
 			//,  "Evo"
 			 "MCTS"
 			, "Q"
@@ -201,7 +201,13 @@ public class STVRExperiment {
         labRecruitsBinding = new LabRecruitsTestServer(
         		useGraphics,
                 Platform.PathToLabRecruitsExecutable(projectRootDir));
-        labRecruitsBinding.waitForGameToLoad();
+        try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        //labRecruitsBinding.waitForGameToLoad();
     }
 	
 	/**
@@ -254,6 +260,7 @@ public class STVRExperiment {
         	// create an instance of LabRecruitsEnvironment; it will bind to the
             // Lab Recruits instance you launched above. It will also load the
             // level specified in the passed LR-config:
+        	System.out.println(">>>> Launching LR") ;
         	launchLabRcruits() ;
         	LabRecruitsEnvironment env = new LabRecruitsEnvironment(config);
         	LabRecruitsTestAgent agent = new LabRecruitsTestAgent(agentId) // matches the ID in the CSV file
@@ -287,11 +294,12 @@ public class STVRExperiment {
 		// instantiate the algorithm:
 		var alg = createAnAlgorithm(algorithmName,level,targetDoor,agentId,rndSeed,timeBudget,episodeLength) ;
 		
-		alg.algorithm.closeSUT = dummy -> {
+		alg.closeSUT = dummy -> {
 			if (labRecruitsBinding != null) {
 				labRecruitsBinding.close();
 				labRecruitsBinding = null ;
 			}
+        	System.out.println(">>>> Closing LR") ;
 			return null ;
 		} ;
 		
@@ -300,6 +308,13 @@ public class STVRExperiment {
 		var discoveredConnections = alg.exploreLRLogic() ;
 		// runtime in second
 		long runtime = (System.currentTimeMillis() - t0)/1000 ;
+		
+		// just to make sure that LR is closed:
+		if (labRecruitsBinding != null) {
+			labRecruitsBinding.close();
+			labRecruitsBinding = null ;
+			Thread.sleep(3000);
+		}
 		
 		Result1 R = new Result1() ;
 		R.alg = algorithmName ;
@@ -423,7 +438,8 @@ public class STVRExperiment {
 				+ dtf.format(now),
 				true) ;	
 	 
-		launchLabRcruits() ;
+		// Agent-constructor now launch LR
+		//launchLabRcruits() ;
 		long t0 = System.currentTimeMillis() ;
 		for (var lev=0; lev<targetLevels.length; lev++) {
 			int baseTime = base_SARuntime[lev] ;
@@ -442,7 +458,9 @@ public class STVRExperiment {
 		long totTime = (System.currentTimeMillis()  - t0)/1000 ;
 		writelnToFile(dir,resultFileName,"*********************",true) ;	
 		writelnToFile(dir,resultFileName,">>>> END experiment. Tot. time: " + totTime + " secs",true) ;
-		labRecruitsBinding.close();
+	
+		// now this is every run's repsonsibility:
+		//labRecruitsBinding.close();
 	}
 	
 	void hitReturnToContinue() {

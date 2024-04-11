@@ -73,7 +73,7 @@ public class QAlg extends BaseSearchAlgorithm {
 			//System.out.println("*** TOTAL BUDGET IS EXHAUSTED.") ;
 			return true ;
 		}
-		if (isTopGoalSolved()) {
+		if (singleSearchMode && isTopGoalSolved()) {
 			DebugUtil.log("*** The search FOUND its global-goal. YAY!") ;
 			return true ;
 		}
