@@ -75,8 +75,6 @@ public class MCTS extends BaseSearchAlgorithm {
 			totalReward += newReward ;
 			averageReward = totalReward / (float) numberOfPlays ;
 			//System.out.println(">>> update avrg rew: " + averageReward) ;
-			if (children!=null && children.stream().allMatch(ch -> ch.fullyExplored))
-				fullyExplored = true ;
 			if (parent != null)
 				parent.backPropagate(newReward) ;
 		}
@@ -86,10 +84,11 @@ public class MCTS extends BaseSearchAlgorithm {
 		 * root.
 		 */
 		void propagateFullyExploredStatus() {
-			if (children != null && children.stream().allMatch(ch -> ch.fullyExplored))
+			if (children != null && children.stream().allMatch(ch -> ch.fullyExplored)) {
 				fullyExplored = true ;
-			if (parent != null)
-				parent.propagateFullyExploredStatus() ;
+				if (parent != null)
+					parent.propagateFullyExploredStatus() ;
+			}
 		}
 		
 		List<Node> getPathLeadingToThisNode() {
@@ -110,6 +109,27 @@ public class MCTS extends BaseSearchAlgorithm {
 			// first element is null, remove it:
 			tr.remove(0) ;
 			return tr ;
+		}
+		
+		@Override
+		public String toString() {
+			return toStringWorker("") ;
+		}
+		
+		public String toStringWorker(String indent) {
+			String z = "" + indent + this.action 
+					+ ", avrgReward=" +  this.averageReward 
+					+ ", fully explored:" + this.fullyExplored ;
+			if (children == null) {
+				z += " X" ;
+				return z ;
+			}
+			for (var ch : children) {
+				var u = ch.toStringWorker("  " + indent) ;
+				z += "\n" ;
+				z += u ;
+			}
+			return z ;
 		}
 		
 	}
@@ -362,6 +382,8 @@ public class MCTS extends BaseSearchAlgorithm {
 			totNumberOfRuns++ ;
 			var R = rewardOfCurrentGameState() ;
 			leaf.backPropagate(R);
+			if (leaf.parent != null) 
+				leaf.parent.propagateFullyExploredStatus();
 			// the case when the state after this node is a winning state:
 			if (singleSearchMode && R >= maxReward) {
 				winningplay = leaf.getTraceLeadingToThisNode() ;
@@ -390,7 +412,8 @@ public class MCTS extends BaseSearchAlgorithm {
 			// no further actions from the leaf is possible, mark it as terminal:
 			leaf.terminal = true ;
 			leaf.fullyExplored = true ;
-			leaf.propagateFullyExploredStatus();
+			if (leaf.parent != null) 
+				leaf.parent.propagateFullyExploredStatus();
 			return ;
 		}
 		

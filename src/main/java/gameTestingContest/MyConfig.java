@@ -43,12 +43,14 @@ public class MyConfig {
 	/**
 	 * Budget for doing a single "task", typically for finding and toggling a button.
 	 * Expressed in number of agent's update cycles.
+	 * Default: 150.
 	 */
 	static public int budget_per_task = 150 ;
 	
 	/**
 	 * Budget doing single round of exploration. Expressed in number of 
 	 * agent's update cycles.
+	 * Default: 150.
 	 */
 	static public int explorationBudget = 150 ;
 	
