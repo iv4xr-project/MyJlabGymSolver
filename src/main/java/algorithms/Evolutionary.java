@@ -368,6 +368,8 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 */
 	List<String> mutate(List<String> chromosome) {
 		
+		if (chromosome.size() == 0) return null ;
+
 		var S = copy(chromosome) ;
 		
 		int mutationPoint = rnd.nextInt(S.size()) ;
@@ -384,6 +386,8 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 * Insert a new gene into a chromosome. The method fails if no gene to insert can be found.
 	 */
 	List<String> extend(List<String> chromosome) {
+		
+		if (chromosome.size() == 0) return null ;
 		
 		var seq = copy(chromosome) ;
 		
@@ -409,7 +413,7 @@ public class Evolutionary extends BaseSearchAlgorithm {
 	 */
 	Pair<List<String>,List<String>> crossOver(List<String> chromosome1, List<String> chromosome2) {
 		
-		if (chromosome1.isEmpty() || chromosome2.isEmpty())
+		if (chromosome1.size() < 2 || chromosome2.size() < 2)
 			return null ;
 		
 		List<String> shorter = new LinkedList<>() ;
@@ -421,10 +425,6 @@ public class Evolutionary extends BaseSearchAlgorithm {
 		else {
 			longer.addAll(chromosome2) ;
 			shorter.addAll(chromosome1) ;
-		}
-		if (shorter.size() == 1) {
-			shorter.addAll(longer.subList(1, longer.size())) ;
-			return new Pair<>(shorter,longer) ;
 		}
 		
 		int crossPoint = shorter.size()/2 ;
