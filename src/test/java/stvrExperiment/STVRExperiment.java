@@ -41,12 +41,12 @@ public class STVRExperiment {
 			"Random"
 			, "Evo"
 			, "MCTS"
-			//, "Q"
+			, "Q"
 	} ;
 	
 	//static int repeatNumberPerRun = 10 ;
-	static int repeatNumberPerRun = 5 ;
-	//static int repeatNumberPerRun = 2 ;
+	//static int repeatNumberPerRun = 5 ;
+	static int repeatNumberPerRun = 2 ;
 
 	static int[] randomSeeds = { 
 			   13, 3713, 255, 24, 999,
@@ -70,6 +70,12 @@ public class STVRExperiment {
 	static int[] ATEST_SAruntime = { 
 			68, 84, 139, 140, 
 			146, 60, 144, 254 } ;
+	
+	/*
+	static int[] ATEST_SAruntime = { 
+			250, 250, 250, 250, 
+			250, 250, 250, 400 } ;
+	*/
 	
 	static String[] ATEST_targetDoors = {
 			"door1", "door6", "door5", "door4", 
@@ -516,13 +522,15 @@ public class STVRExperiment {
 		hitReturnToContinue() ;
 	}
 	
-	//@Test
+	@Test
 	public void run_ATEST_experiment_Test() throws Exception {
 		runExperiment("ATEST", ATEST_levels, ATEST_targetDoors, "agent0", 
 				ATEST_SAruntime, 
 				ATEST_episode_length,
-				MyConfig.budget_per_task,   // using default budget per task, 150
-				MyConfig.explorationBudget  // using default exploration budget, 150
+				//MyConfig.budget_per_task,   // using default budget per task, 150
+				//MyConfig.explorationBudget  // using default exploration budget, 150
+				500,
+				500
 				) ;
 	}
 	
@@ -536,7 +544,7 @@ public class STVRExperiment {
 				) ;
 	}
 	
-	@Test
+	//@Test
 	public void run_LargeRandom_experiment_Test() throws Exception {
 		runExperiment("LargeRandom", LargeRandom_levels, LargeRandom_targetDoors,  "agent1", 
 				  LargeRandom_SAruntime, 

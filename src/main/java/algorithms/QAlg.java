@@ -4,6 +4,7 @@ import static agents.tactics.GoalLib.entityInteracted;
 
 import java.util.* ;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import agents.LabRecruitsTestAgent;
 import nl.uu.cs.aplib.utils.Pair;
@@ -16,12 +17,54 @@ public class QAlg extends BaseSearchAlgorithm {
 		public float maxReward ; 
 	}
 	
-	/** 
-	 * A map from states to their visit-counts. 
+	/**
+	 * A representation of LR-state for the Q-table. 
 	 */
-	public Map<String,Integer> visitCount = new HashMap<>() ;
+	public static class LRQstate {
+		
+		List<String> onButtons = new LinkedList<>() ;
+		List<String> offButtons = new LinkedList<>() ;
+		//int numberOfFoundConnections = 0 ;
+		boolean alive = true ;
+		
+		LRQstate() { }
+		LRQstate(XBelief belief) {
+			onButtons = belief.knownButtons().stream()
+								.filter(b -> belief.isOn(b))
+								.map(e -> e.id)
+								.collect(Collectors.toList());
+			onButtons.sort((s1,s2) -> s1.compareTo(s2)) ;
+			
+			offButtons = belief.knownButtons().stream()
+								.filter(b -> ! belief.isOn(b))
+								.map(e -> e.id)
+								.collect(Collectors.toList());
+			offButtons.sort((s1,s2) -> s1.compareTo(s2)) ;
+			//numberOfFoundConnections = belief.getConnections().size() ;
+			alive = belief.worldmodel().health > 0 ;
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if (! (o instanceof LRQstate)) return false ;
+			LRQstate o_ = (LRQstate) o ;
+			return this.onButtons.equals(o_.onButtons)
+					&& this.offButtons.equals(o_.offButtons)
+					//&& this.numberOfFoundConnections == o_.numberOfFoundConnections 
+					&& this.alive == o_.alive ;
+		}
+		
+		@Override
+	    public int hashCode() {
+	        return onButtons.hashCode() 
+	        		+ 31*offButtons.hashCode() 
+	        		//+ 31*numberOfFoundConnections 
+	        		+ (alive?1:0) ;
+	    }
+		
+	}
 	
-	public Map<String,Map<String,ActionInfo>> qtable = new HashMap<>() ;
+	public Map<LRQstate,Map<String,ActionInfo>> qtable = new HashMap<>() ;
 	
 	public int maxdepth = 8 ;
 	
@@ -44,7 +87,7 @@ public class QAlg extends BaseSearchAlgorithm {
 	public Set<Pair<String,String>> discoveredConnections = new HashSet<>() ; 
 	
 	List<String> trace = new LinkedList<>() ;
-	String compressedTrace = "" ;
+	//String compressedTrace = "" ;
 	
 	/**
 	 * Create an agent, with a state, and connected to the SUT. The function may
@@ -80,22 +123,6 @@ public class QAlg extends BaseSearchAlgorithm {
 		return false ;
 	}
 	
-	void addActionToTrace(String action) {
-		trace.add(action) ;
-		String a = action ;
-		if (a.startsWith("button")) {
-			a = a.substring(6) ;
-		}
-		else if (a.startsWith("b"))
-			a = a.substring(1) ;
-		compressedTrace += a ;
-	}
-	
-	void clearTrace() {
-		trace.clear();
-		compressedTrace = "" ;
-	}
-	
 	float valueOfCurrentGameState() {
 		var S = this.getBelief() ;
 		if (topGoalPredicate != null && topGoalPredicate.test(S)) {
@@ -112,35 +139,27 @@ public class QAlg extends BaseSearchAlgorithm {
 		// add this back to the time accounting, as we won't count LR initialization as exec-time:
 		this.remainingSearchBudget += (int) duration ;
 		
-		clearTrace() ;
+		var qstate = new LRQstate(getBelief()) ;
+		trace.clear();
 		
+		getBelief().pathfinder().wipeOutMemory();
+		doExplore(explorationBudget) ;
+		
+		var initialButtons = getBelief().reachableButtons() ;
+		Map<String,ActionInfo> initialActions = new HashMap<>() ;
+		for (var b : initialButtons) {
+			 var info = new ActionInfo() ;
+			 info.maxReward = 0 ;
+			 initialActions.put(b.id, info) ;
+		}
+		qtable.put(qstate,initialActions) ;
+				
 		float totalEpisodeReward = 0 ;
 		
 		while (trace.size() < maxdepth && winningplay == null) {
-			System.out.println(">>> TRACE: " + compressedTrace) ;
-			Integer visited = visitCount.get(compressedTrace) ;
-			if (visited == null) {
-				// System.out.println(">>> state not yet visited: " + compressedTrace) ;
-				// reset exploration, then do full explore:
-				 getBelief().pathfinder().wipeOutMemory();
-				 doExplore(explorationBudget) ;
-				 var S = getBelief() ;
-				 var reachableButtons = S.reachableButtons() ;
-				 Map<String,ActionInfo> actions = new HashMap<>() ;
-				 for (var b : reachableButtons) {
-					 var info = new ActionInfo() ;
-					 info.maxReward = 0 ;
-					 actions.put(b.id, info) ;
-				 }
-				 qtable.put(compressedTrace, actions) ;
-				 visited = 1 ;
-			}
-			else visited++ ;
-			visitCount.put(compressedTrace, visited) ;
 			
-			var candidateActions = qtable.get(compressedTrace) ;
-			
-			
+			System.out.println(">>> TRACE: " + trace) ;
+			var candidateActions = qtable.get(qstate) ;			
 			if (candidateActions.isEmpty()) 
 				// no further actions is possible, so we stop the episode
 				break ;
@@ -175,19 +194,20 @@ public class QAlg extends BaseSearchAlgorithm {
 		    System.out.println(">>> chosen-action : " + chosenAction + ", info:" + info.maxReward) ;
 		    // now, execute the action:
 		    var value0 = valueOfCurrentGameState() ;
-			var status = solveGoal("Toggling button " + button, entityInteracted(button), budget_per_task) ;
-			 // if the agent is dead, break:
-			 if (agent.getState().worldmodel().health <= 0) {
+		    trace.add(chosenAction) ;
+		    var status = solveGoal("Toggling button " + button, entityInteracted(button), budget_per_task) ;
+			var newQstate = new LRQstate(getBelief()) ;
+			// if the agent is dead, break:
+			if (agent.getState().worldmodel().health <= 0) {
 				 info.maxReward = -100 ;
 				 return totalEpisodeReward ;
-			 }
-			 // also break the execution if a button fails:
-			 if (!status.success()) {
+			}
+			// also break the execution if a button fails:
+			if (!status.success()) {
 				 info.maxReward = -100 ;
 				 return totalEpisodeReward ;
-			 }
+			}
 			 
-			 addActionToTrace(chosenAction) ;
 			 getBelief().pathfinder().wipeOutMemory();
 			 doExplore(explorationBudget) ;
 			 // we are now at the "next state" T reached after executing the chosen action,
@@ -210,21 +230,19 @@ public class QAlg extends BaseSearchAlgorithm {
 				 return totalEpisodeReward ;	 
 			 }
 			 // else :
-			 // calculate the maximum rewards if we continue from that next state T:
+			 // calculate the maximum rewards if we continue from newQstate:
 			 // note that the trace is already extendced with the last action taken
-			 var nextnextActions = qtable.get(compressedTrace) ;
+			 var nextnextActions = qtable.get(newQstate) ;
 			 float S_maxNextReward = -100 ;
 			 if (nextnextActions == null) {
 				 var reachableButtons = T.reachableButtons() ;
-				 Map<String,ActionInfo> actions = new HashMap<>() ;
+				 nextnextActions = new HashMap<>() ;
 				 for (var b : reachableButtons) {
 					 var info2 = new ActionInfo() ;
 					 info2.maxReward = 0 ;
-					 actions.put(b.id, info2) ;
+					 nextnextActions.put(b.id, info2) ;
 				 }
-				 qtable.put(compressedTrace, actions) ;
-				 nextnextActions = actions ;
-				 visitCount.put(compressedTrace, 1) ;
+				 qtable.put(newQstate, nextnextActions) ;
 				 S_maxNextReward = 0 ;
 			 }
 			 else {
@@ -234,9 +252,11 @@ public class QAlg extends BaseSearchAlgorithm {
 						}
 				 }
 			 }
-			 // calculate the new reward (prevstate,a):
+			 // calculate the new qvalue of (qstate,a):
 			 info.maxReward = (1 - alpha) * info.maxReward
 					           + alpha * (reward + gamma * S_maxNextReward) ;
+			 
+			 qstate = newQstate;
 			
 		}
 		closeEnv() ;
