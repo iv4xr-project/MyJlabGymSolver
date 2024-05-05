@@ -33,14 +33,14 @@ public class STVRExperiment {
 	
 	static String projectRootDir = System.getProperty("user.dir") ;
 	
-	static String levelsDir = projectRootDir + "/src/test/resources/levels/STVR";
+	static String levelsDir = Paths.get(projectRootDir, "src", "test", "resources", "levels", "STVR").toString() ;
 	
-	static String dataDir = projectRootDir + "/data" ;
+	static String dataDir =  Paths.get(projectRootDir,"data").toString() ;
 	
 	static String[] availableAlgorithms = { 
-			"Random"
-			, "Evo"
-			, "MCTS"
+			//"Random"
+			//, "Evo"
+			 "MCTS"
 			, "Q"
 	} ;
 	
@@ -94,7 +94,7 @@ public class STVRExperiment {
 			// , "durk_1"
 			} ;
 	static int[] DDO_SAruntime = { 1492, 2680 } ;
-	static String[] DDO_targetDoors = { "DoorEntrance", "DoorKey4",  } ;
+	static String[] DDO_targetDoors = { "doorEntrance", "doorKey4",  } ;
 	// specifying search-depth:
 	static int[] DDO_episode_length = { 9 , 5 } ;
 	
@@ -102,8 +102,8 @@ public class STVRExperiment {
 	// ================ Large-Random level =================
 
 	static String[] LargeRandom_levels = { 
-	  "FBK_largerandom_R9_cleaned",   // F1
-	  "FBK_largerandom_R9_cleaned",   // F2
+	  "FBK_largerandom_R9_cleaned"   // F1
+	  // "FBK_largerandom_R9_cleaned",   // F2
 	  //"FBK_largerandom_R9_cleaned",   // F3
 	  //"FBK_largerandom_R9_cleaned",  // F4
 	  //"FBK_largerandom_R9_cleaned",  // F5
@@ -115,8 +115,13 @@ public class STVRExperiment {
 	  //"FBK_largerandom_R9_cleaned"   // F11
 	  } ;
 	
-	static int[] LargeRandom_SAruntime = { 14,
-	   113, 954, 1045, 1076, 1827, 
+	static int[] LargeRandom_SAruntime = { 
+	   //14,   // F1
+	   //113,  // F2
+	   //954,  // F3
+	   //1045, // F4
+	   1076, // F5
+	   1827, // F6 
 	   1532, 
 	   3000, // one hrs (3000 x 1.2)
 	   3000, // one hrs
@@ -124,15 +129,24 @@ public class STVRExperiment {
 	   1420 			
 	} ;
 	
-	static String[] LargeRandom_targetDoors = {"door26", 
-	  "door5", "door39", "door33", "door16", "door37",
+	static String[] LargeRandom_targetDoors = {
+	  //"door26",  // F1
+	  //"door5",   // F2
+	  //"door39",  // F3
+	  //"door33",  // F4
+	  "door16",  // F5
+	  "door37",  // F6
 	  "door34", "door3", "door21", "door22", "door38"}  ;
 	
 	// specifying search-depth:
-	static int[] LargeRandom_episode_length = { 2,
-			5 , 6, 8, 11, 15,
-			14, 12, 14, 20, 21
-			
+	static int[] LargeRandom_episode_length = { 
+			//2,  // F1
+			//5,  // F2
+			//6,  // F3
+			//8,  // F4
+			11, // F5
+			15, // F6
+			14, 12, 14, 20, 21		
 	    } ;
 
 	
@@ -155,16 +169,16 @@ public class STVRExperiment {
 		@Override
 		public String toString() {
 			String z = "== level:" + level ;
-			z +=     "\n== alg:" + alg ;
+			z +=     "\n== alg :" + alg ;
 			z +=     "\n== goal:" + (goalsolved ? "ACHIEVED" : "X") ;
 			z +=     "\n== runtime(sec):" + runtime ;
-			z +=     "\n== #turns:" + numberOfTurns ;
-			z +=     "\n== #episodes:" + numberOfEpisodes ;
+			z +=     "\n== #turns      :" + numberOfTurns ;
+			z +=     "\n== #episodes   :" + numberOfEpisodes ;
 			z +=     "\n== #connections:" + numberOfConnections ;
-			z +=     "\n== #inferred:"    + connectionsInferred ;
-			z +=     "\n== #correct:"     + correctConnections ;
-			z +=     "\n== #wrong:"       + wrongConnections ;
-			z +=     "\n== area-cov:"     + areaCoverage ;
+			z +=     "\n==    inferred :"    + connectionsInferred ;
+			z +=     "\n==    correct  :"     + correctConnections ;
+			z +=     "\n==    wrong    :"       + wrongConnections ;
+			z +=     "\n== area-cov    :"     + areaCoverage ;
 			return z ;
 		}
 	}
@@ -522,7 +536,7 @@ public class STVRExperiment {
 		hitReturnToContinue() ;
 	}
 	
-	@Test
+	//@Test
 	public void run_ATEST_experiment_Test() throws Exception {
 		runExperiment("ATEST", ATEST_levels, ATEST_targetDoors, "agent0", 
 				ATEST_SAruntime, 
@@ -544,7 +558,7 @@ public class STVRExperiment {
 				) ;
 	}
 	
-	//@Test
+	@Test
 	public void run_LargeRandom_experiment_Test() throws Exception {
 		runExperiment("LargeRandom", LargeRandom_levels, LargeRandom_targetDoors,  "agent1", 
 				  LargeRandom_SAruntime, 

@@ -1,0 +1,11 @@
+Flag1    ---> Door26   --->   runTime:  14
+Flag2    ---> Door5    --->   runTime:  113
+Flag3    ---> Door39   --->   runTime:  954
+Flag4    ---> Door33   --->   runTime:  1045
+Flag5    ---> Door16   --->   runTime:  1076
+Flag6    ---> Door37   --->   runTime:  1827
+Flag7    ---> Door34   --->   runTime:  1532
+Flag8    ---> Door3    --->   runTime:  --- should be the run time budget: 100000
+Flag9    ---> Door21   --->   runTime:  --- should be the run time budget: 100000
+Flag10   ---> Door22   --->   runTime:  ?
+Flag11   ---> Door38   --->   runTime:  1420 with given the position
