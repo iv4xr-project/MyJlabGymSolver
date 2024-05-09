@@ -26,6 +26,7 @@ import gameTestingContest.MyConfig;
 import gameTestingContest.MyTestingAI;
 import leveldefUtil.LRFloorMap;
 import leveldefUtil.LRconnectionLogic;
+import nl.uu.cs.aplib.utils.Pair;
 
 public class STVRExperiment {
 	
@@ -165,6 +166,11 @@ public class STVRExperiment {
 		int wrongConnections ;
 		int numberOfEpisodes ;
 		float areaCoverage ;
+		/**
+		 * Well... for the LargeRandom experiment we need to bubble up area coverage
+		 * information :(  Piggy-backing it here.
+		 */
+		Set<Pair<Integer,Integer>> visitedTiles ;
 		
 		@Override
 		public String toString() {
@@ -280,8 +286,6 @@ public class STVRExperiment {
 		// Configure the algorithm:
 		MyConfig.ALG = algorithmName ;
 		//MyConfig.solutionLengthUpperBound = maxSearchDepth ;
-		MyConfig.budget_per_task = 150 ;
-		MyConfig.explorationBudget = 200 ;
 		MyConfig.agentId = agentId ;
 		MyConfig.randomSeed = rndSeed ;
 		MyConfig.searchbuget = timeBudget ;
@@ -373,7 +377,8 @@ public class STVRExperiment {
 		R.wrongConnections = Z.get("#wrong") ;
 		R.numberOfEpisodes = alg.algorithm.totNumberOfRuns ;
 		// calculate area coverage:
-		int covered = (int) alg.algorithm.getCoveredTiles2D().stream().filter(tile -> walkableTiles.contains(tile)).count() ;
+		R.visitedTiles = alg.algorithm.getCoveredTiles2D() ;
+		int covered = (int) R.visitedTiles.stream().filter(tile -> walkableTiles.contains(tile)).count() ;
 		R.areaCoverage = (float) covered / (float) walkableTiles.size() ;
 		// write the result to a result file:
 		System.out.println(R.toString()) ;
@@ -430,9 +435,14 @@ public class STVRExperiment {
 	/**
 	 * Run all algorithms on the given target level. Write the result=summary of every 
 	 * algorithm to a file.
+	 * 
+	 * <p>It returns a map, that maps every algorithm to the set tiles visited during
+	 * the runs. For algorithm A, this tiles-visit is organized as a list V, where
+	 * V(i) is the set of all tiles visited by run-i of A on the given level.
+	 * 
 	 * <p>The timeBudget is in msec.
 	 */
-	void runAlgorithms(
+	Map<String,List<Set<Pair<Integer,Integer>>>> runAlgorithms(
 			String exerimentName,
 			String level, 
 			String targetDoor,
@@ -444,14 +454,17 @@ public class STVRExperiment {
 			int numberOfRepeat) throws Exception {
 		
 		String resultFileName = exerimentName + "_results.txt" ;
-		List<Result1> algresults = new LinkedList<>() ;
 		
 		String dir = Paths.get(dataDir, exerimentName).toString() ;
 		writelnToFile(dir,resultFileName,"*********************",true) ;
 		
+		List<Result1> algresults = new LinkedList<>() ;
+		Map<String,List<Set<Pair<Integer,Integer>>>> allVisitedTilesInfo = new HashMap<>() ;
+		
 		for (int a=0 ; a < availableAlgorithms.length; a++) {
 			// iterate over the algorithms: Evo/MCTS/Q
 			String algName = availableAlgorithms[a] ;
+			List<Set<Pair<Integer,Integer>>> visitedTilesByAlg = new LinkedList<>() ;
 			algresults.clear();
 			for (int runNumber=0; runNumber<numberOfRepeat; runNumber++) { 
 			    // repeated runs
@@ -460,9 +473,12 @@ public class STVRExperiment {
 						 			 budget_per_task, exploration_budget,
 						             dir) ;
 				algresults.add(R) ;
+				visitedTilesByAlg.add(R.visitedTiles) ;
 			}
 			writeResultsToFile(level,targetDoor,algName,dir,resultFileName,algresults) ;
-		}	
+			allVisitedTilesInfo.put(algName, visitedTilesByAlg) ;
+		}
+		return allVisitedTilesInfo ;
 	}
 	
 	/**
@@ -494,6 +510,9 @@ public class STVRExperiment {
 				+ dtf.format(now),
 				true) ;	
 	 
+		
+		List<Map<String,List<Set<Pair<Integer,Integer>>>>> visitedTilesInfoGrrrr = new LinkedList<>() ;
+		
 		// Agent-constructor now launch LR
 		//launchLabRcruits() ;
 		long t0 = System.currentTimeMillis() ;
@@ -503,7 +522,7 @@ public class STVRExperiment {
 			// time budget is specified to 1.2x Samira's alg:
 			int timeBudget12 = (int) (1.2f * (float) baseTime * 1000) ;
 			
-			runAlgorithms(experimentName,
+			var tilesVisits = runAlgorithms(experimentName,
 					targetLevels[lev],
 					targetDoors[lev],
 					agentId,timeBudget12,
@@ -512,11 +531,63 @@ public class STVRExperiment {
 					exploration_budget,
 					repeatNumberPerRun
 					) ;
+			visitedTilesInfoGrrrr.add(tilesVisits) ;
 		}	
 		long totTime = (System.currentTimeMillis()  - t0)/1000 ;
 		writelnToFile(dir,resultFileName,"*********************",true) ;	
+		
+		if (Arrays.stream(targetLevels).allMatch(L -> L.equals(targetLevels[0]))) {
+			// Pff extra logic for calculating total area coverage for LargeRandom-case:
+
+			// all levels are the same. We will calculate the total area coverage of all
+			// tests.
+			// First, for each algorithm, add up all the visits-info each each run-k across
+			// all targets:
+			Map<String,List<Set<Pair<Integer,Integer>>>> totalVisits_perAlg = new HashMap<>() ;
+			for (int a=0; a<availableAlgorithms.length; a++) {
+				var alg = availableAlgorithms[a] ;
+				// visits of target0:
+				totalVisits_perAlg.put(alg, visitedTilesInfoGrrrr.get(0).get(alg)) ;
+				// for each target:
+				for (var targetNr=1; targetNr < visitedTilesInfoGrrrr.size(); targetNr++) {
+					var visits_on_lev = visitedTilesInfoGrrrr.get(targetNr).get(alg) ;
+					// for each run on the target:
+					for (int runNr=0; runNr<repeatNumberPerRun; runNr++) {
+						// visits of alg's run-r on target 0:
+						var V0 = totalVisits_perAlg.get(alg).get(runNr) ;
+						// visits of alg's run-r on target targetNr:
+						var V1 = visits_on_lev.get(targetNr) ;
+						// add V on that of target-0:
+						V0.addAll(V1) ;
+					}
+				}
+			}
+			// Now totalVisits_perAlg should contain a mapping from alg A
+			// to a list L, where L(k) is the total visits of every run-k
+			// all all targets combined.
+
+			String levelFile = Paths.get(levelsDir, targetLevels[0] + ".csv").toString() ;
+			var walkableTiles = LRFloorMap.firstFloorWalkableTiles(levelFile) ; 
+			for (int a=0; a<availableAlgorithms.length; a++) {
+				var alg = availableAlgorithms[a] ;
+				var visits_by_alg = totalVisits_perAlg.get(alg) ;
+				//float[] totalAreaCoverage = new float[repeatNumberPerRun] ;
+				float sum = 0;
+				for (int runNr=0; runNr < repeatNumberPerRun; runNr++) {
+					var visits = visits_by_alg.get(runNr) ;
+					int covered = (int) visits.stream().filter(tile -> walkableTiles.contains(tile)).count() ;
+					//totalAreaCoverage[runNr] = (float) covered / (float) walkableTiles.size() ;
+					float totalAreaCoverage_of_runNr = (float) covered / (float) walkableTiles.size() ;
+					sum += totalAreaCoverage_of_runNr ;
+				}
+				float avrgTotalAreaCoverage = sum / (float) repeatNumberPerRun ;
+				writelnToFile(dir,resultFileName,"== tot. area cov of " + alg + " " + avrgTotalAreaCoverage,true) ;	
+
+			}
+		}
+		
 		writelnToFile(dir,resultFileName,">>>> END experiment. Tot. time: " + totTime + " secs",true) ;
-	
+
 		// now this is every run's repsonsibility:
 		//labRecruitsBinding.close();
 	}
