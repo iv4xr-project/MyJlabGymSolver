@@ -9,3 +9,24 @@ Flag8    ---> Door3    --->   runTime:  --- should be the run time budget: 10000
 Flag9    ---> Door21   --->   runTime:  --- should be the run time budget: 100000
 Flag10   ---> Door22   --->   runTime:  ?
 Flag11   ---> Door38   --->   runTime:  1420 with given the position
+
+
+========== 
+new targets??
+
+d17   Y
+d12   can solve, not include it
+d5    Y
+d39   Y
+d0 or d2    Y
+
+----
+d4    can't solve
+d14   can't solve
+d11   can't solev
+
+Hard:
+d33   Y
+d16   Y solved
+d37   Y
+d38   ?

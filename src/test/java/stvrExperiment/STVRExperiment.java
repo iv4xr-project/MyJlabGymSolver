@@ -39,63 +39,73 @@ public class STVRExperiment {
 	static String dataDir =  Paths.get(projectRootDir,"data").toString() ;
 	
 	static String[] availableAlgorithms = { 
-			//"Random"
-			//, "Evo"
-			 "MCTS"
+			"Random"
+			,"Evo"
+			,"MCTS"
 			, "Q"
 	} ;
 	
 	//static int repeatNumberPerRun = 10 ;
-	//static int repeatNumberPerRun = 5 ;
-	static int repeatNumberPerRun = 2 ;
+	static int repeatNumberPerRun = 5 ;
+	// static int repeatNumberPerRun = 3 ;
 
 	static int[] randomSeeds = { 
-			   13, 3713, 255, 24, 999,
-			   4919, 1023, 1, 100, 10001 }  ;
+		13, 3713, 255, 24, 999,
+		4919, 1023, 1, 100, 10001 }  ;
 	
 	
 	// ================ ATEST levels =================
 	//static String[] targetLevels = { "buttons_doors_1", "samira_8room" } ;
 	static String[] ATEST_levels = { 
-			"BM2021_diff1_R3_1_1_H"   // minimum solution: 2
-			,"BM2021_diff1_R4_1_1"    // minimum solution: 4
-			,"BM2021_diff1_R4_1_1_M"  // minimum solution: 3
-			,"BM2021_diff2_R5_2_2_M"  // minimum solution: 2
-			,"BM2021_diff2_R7_2_2"    // minimum solution: 4
-			,"BM2021_diff3_R4_2_2"    // minimum solution: 0
-			,"BM2021_diff3_R4_2_2_M"  // minimum solution: 4
-			,"BM2021_diff3_R7_3_3" // minimum solution: 2
+		"BM2021_diff1_R3_1_1_H"   // minimum solution: 2
+		,"BM2021_diff1_R4_1_1"    // minimum solution: 4
+		,"BM2021_diff1_R4_1_1_M"  // minimum solution: 3
+		,"BM2021_diff2_R5_2_2_M"  // minimum solution: 2
+		,"BM2021_diff2_R7_2_2"    // minimum solution: 4
+		,"BM2021_diff3_R4_2_2"    // minimum solution: 0
+		,"BM2021_diff3_R4_2_2_M"  // minimum solution: 4
+		,"BM2021_diff3_R7_3_3" // minimum solution: 2
 	} ;
 	
-	// runtime of Samira's alg, in seconds:
+	static String[] ATEST_targetDoors = {
+		"door1", "door6", "door5", "door4", 
+		"door6", "door6", "door3", "door6"
+	} ;
+	
+	/*
+	// runtime of Samira's alg, in seconds, original experiment:
 	static int[] ATEST_SAruntime = { 
 			68, 84, 139, 140, 
 			146, 60, 144, 254 } ;
-	
-	/*
-	static int[] ATEST_SAruntime = { 
-			250, 250, 250, 250, 
-			250, 250, 250, 400 } ;
 	*/
 	
-	static String[] ATEST_targetDoors = {
-			"door1", "door6", "door5", "door4", 
-			"door6", "door6", "door3", "door6"
-		} ;
+	static int[] ATEST_SAruntime = { 
+		75, 107, 135, 160, 
+		135, 379, 127, 215 } ;
+	
+	/* 10-mim runtime, 500sec, which is then 600s after 1.2 multiplier:
+	static int[] ATEST_SAruntime = { 
+			500, 500, 500, 500, 
+			500, 500, 500, 500 } ;
+	*/
+	
 	
 	// specifying search-depth:
 	static int[] ATEST_episode_length = {
-			5,5,5,5,
-			5,5,5,5
+		5,5,5,5,
+		5,5,5,5
 	} ;
 	
 	// ================ DDO levels =================
 
-	static String[] DDO_levels = { "sanctuary_1"
-			// , "durk_1"
-			} ;
-	static int[] DDO_SAruntime = { 1492, 2680 } ;
+	static String[] DDO_levels = { "sanctuary_1", "durk_1" } ;
 	static String[] DDO_targetDoors = { "doorEntrance", "doorKey4",  } ;
+	// orginal experiment:
+	// static int[] DDO_SAruntime = { 1492, 2680 } ;
+	static int[] DDO_SAruntime = { 1538, 2483 } ;
+	// 1-hr runtime, 3000sec, which is then 3600s after 1.2 multiplier:
+	// static int[] DDO_SAruntime = { 3000, 3000  } ;
+	
 	// specifying search-depth:
 	static int[] DDO_episode_length = { 9 , 5 } ;
 	
@@ -103,19 +113,51 @@ public class STVRExperiment {
 	// ================ Large-Random level =================
 
 	static String[] LargeRandom_levels = { 
-	  "FBK_largerandom_R9_cleaned"   // F1
-	  // "FBK_largerandom_R9_cleaned",   // F2
-	  //"FBK_largerandom_R9_cleaned",   // F3
-	  //"FBK_largerandom_R9_cleaned",  // F4
-	  //"FBK_largerandom_R9_cleaned",  // F5
-	  //"FBK_largerandom_R9_cleaned",  // F6
-	  //"FBK_largerandom_R9_cleaned",  // F7
-	  //"FBK_largerandom_R9_cleaned",  // F8  unsolvable by SA
-	  //"FBK_largerandom_R9_cleaned",  // F9  unsolvable by SA
-	  //"FBK_largerandom_R9_cleaned",  // F10
-	  //"FBK_largerandom_R9_cleaned"   // F11
+	  "FBK_largerandom_R9_cleaned", 
+	  "FBK_largerandom_R9_cleaned",  
+	  "FBK_largerandom_R9_cleaned",   
+	  "FBK_largerandom_R9_cleaned",  
+	  "FBK_largerandom_R9_cleaned",  
+	  "FBK_largerandom_R9_cleaned",  
+	  "FBK_largerandom_R9_cleaned",  
+	  "FBK_largerandom_R9_cleaned",  
+	  "FBK_largerandom_R9_cleaned",  
+	  "FBK_largerandom_R9_cleaned"
 	  } ;
 	
+	/*
+	// Targets from the original experiment:
+	static String[] LargeRandom_targetDoors = {
+			  //"door26",  // F1
+			  //"door5",   // F2
+			  //"door39",  // F3
+			  //"door33",  // F4
+			  "door16",  // F5
+			  "door37",  // F6
+			  "door34",  // F7
+			  "door3",   // F8  unsolvable by Online
+			  "door21",  // F9  unsolvable by Online
+			  "door22",  // F10
+			  "door38"   // F11
+			  }  ;
+	*/
+	
+	static String[] LargeRandom_targetDoors = { // new targets, 10x
+		"door17",  
+		"door12",   
+		"door5",  
+		"door39",  
+		"door2",
+		// ----
+		"door33",  
+		"door16",  
+		"door30",   
+		"door15",  
+		"door9"  
+	} ;
+	
+	/*
+	// From the orginal experiment:
 	static int[] LargeRandom_SAruntime = { 
 	   //14,   // F1
 	   //113,  // F2
@@ -129,17 +171,44 @@ public class STVRExperiment {
 	   1420, // time unknown!
 	   1420 			
 	} ;
+	*/
 	
-	static String[] LargeRandom_targetDoors = {
-	  //"door26",  // F1
-	  //"door5",   // F2
-	  //"door39",  // F3
-	  //"door33",  // F4
-	  "door16",  // F5
-	  "door37",  // F6
-	  "door34", "door3", "door21", "door22", "door38"}  ;
+	
+	static int[] LargeRandom_SAruntime = {  
+		47,   // d17 solved
+		82,   // d12 solved
+		162,  // d5  solved
+		333,  // d39 solved
+		460,  // d2  ... mostly Online could not solve
+		// ==
+		453,  // d33 Online could not solve 
+		217,  // d16 solved
+		460,  // d30 not solved
+		470,  // d15 not solved
+		445,  // d9  not solved			
+	} ;
+	
+	
+
+	// 5 min, for the first three targets:
+    //static int[] LargeRandom_SAruntime = {  250, 250, 250 } ;
+	
+    /*
+	// 10 min
+    static int[] LargeRandom_SAruntime = { 
+		500, 500, 500, 500, 500,
+		500, 500, 500, 500, 500 } ;
+	*/
+	
+	// 1-hr runtime, 3000sec, which is then 3600s after 1.2 multiplier:
+    // static int[] LargeRandom_SAruntime = { 
+	// 		3000, 3000, 3000, 3000, 3000,
+	//      3000, 3000, 3000, 3000, 3000 } ;
+	
 	
 	// specifying search-depth:
+	/*
+	// for the original experiment
 	static int[] LargeRandom_episode_length = { 
 			//2,  // F1
 			//5,  // F2
@@ -149,9 +218,23 @@ public class STVRExperiment {
 			15, // F6
 			14, 12, 14, 20, 21		
 	    } ;
+	*/
+	
+	static int[] LargeRandom_episode_length = { 
+			2,   // d17 solved
+			4,   // d12 solved
+			5,   // d5  solved
+			6,   // d39 solved
+			11,  // d2  ... mostly Online could not solve
+			// ==
+			8,  // d33 Online could not solve 
+			11,  // d16 solved
+			13,  // d30 not solved
+			15,  // d15 not solved
+			15   // d9  not solved		
+	    } ;
 
-	
-	
+		
 	static LabRecruitsTestServer labRecruitsBinding;
 	
 	static class Result1 {
@@ -236,7 +319,7 @@ public class STVRExperiment {
 	}
 	
 	static void launchLabRcruits() {
-        var useGraphics = true; // set this to false if you want to run the game without graphics
+        var useGraphics = false ; // set this to false if you want to run the game without graphics
         SocketReaderWriter.debug = false;
         labRecruitsBinding = new LabRecruitsTestServer(
         		useGraphics,

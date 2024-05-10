@@ -82,6 +82,16 @@ public class BaseSearchAlgorithm {
 	 */
 	public int delayBetweenAgentUpateCycles = 50 ;
 	
+	/**
+	 * If true, this will stop the execution of {@link #solveGoal(String, GoalStructure, int)}
+	 * if stuck is detected. The detection is performed by periodically sampling the
+	 * agent position. If the last 10 samples show the same position, the agent is considered
+	 * as "stuck", and the execution of solveGoal is terminated.
+	 * 
+	 * <p>Default is true.
+	 */
+	public boolean forceGoalExecutionToTerminateWhenStuckIsDetected = true ;
+	
 	
 	public int getTotalSearchBudget() { 
 		return totalSearchBudget ;
@@ -254,6 +264,9 @@ public class BaseSearchAlgorithm {
 		getBelief().clearGoalLocation();
 		getBelief().clearStuckTrackingInfo();
 		agent.setGoal(G) ;
+		
+		// positions sampled every 10 cycles, to facilitate stuck detection
+		List<Vec3> sampledPositions = new LinkedList<>() ;			
 		int i=0 ;
 		//WorldEntity lastInteractedButton = null ;
 		while (G.getStatus().inProgress() && !terminationConditionIsReached()) {
@@ -283,6 +296,21 @@ public class BaseSearchAlgorithm {
 					if(e.type.equals("Door") && e.hasPreviousState()) {
 						getBelief().registerConnection(lastInteractedButton.id,e.id) ;
 					}	
+				}
+			}
+			// stuck detection:
+			if (forceGoalExecutionToTerminateWhenStuckIsDetected) {
+				if (i % 100 == 0 && sampledPositions.size() >= 9) {
+					var p0 = sampledPositions.get(0) ;
+					if (sampledPositions.stream().allMatch(p -> Vec3.distSq(p,p0) <= 1f)) {
+						// agent seems to be stuck!
+						DebugUtil.log(">> The agent seems to be stuck. Terminating its run.");
+						break ;
+					}
+					sampledPositions.clear();
+				}
+				if (i % 10 == 0) {
+					sampledPositions.add(getBelief().worldmodel.position) ;
 				}
 			}
 		}
