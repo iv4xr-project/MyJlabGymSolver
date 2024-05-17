@@ -42,12 +42,12 @@ public class STVRExperiment {
 			"Random"
 			,"Evo"
 			,"MCTS"
-			, "Q"
+			,"Q"
 	} ;
 	
-	//static int repeatNumberPerRun = 10 ;
-	static int repeatNumberPerRun = 5 ;
-	// static int repeatNumberPerRun = 3 ;
+	static int repeatNumberPerRun = 10 ;
+	// static int repeatNumberPerRun = 5 ;
+	//static int repeatNumberPerRun = 2 ;
 
 	static int[] randomSeeds = { 
 		13, 3713, 255, 24, 999,
@@ -68,7 +68,8 @@ public class STVRExperiment {
 	} ;
 	
 	static String[] ATEST_targetDoors = {
-		"door1", "door6", "door5", "door4", 
+		"door3", // "door1", 
+		"door6", "door5", "door4", 
 		"door6", "door6", "door3", "door6"
 	} ;
 	
@@ -79,16 +80,16 @@ public class STVRExperiment {
 			146, 60, 144, 254 } ;
 	*/
 	
+	/*
 	static int[] ATEST_SAruntime = { 
 		75, 107, 135, 160, 
 		135, 379, 127, 215 } ;
+	*/
 	
-	/* 10-mim runtime, 500sec, which is then 600s after 1.2 multiplier:
+	// 10-mim runtime, 500sec, which is then 600s after 1.2 multiplier:
 	static int[] ATEST_SAruntime = { 
 			500, 500, 500, 500, 
 			500, 500, 500, 500 } ;
-	*/
-	
 	
 	// specifying search-depth:
 	static int[] ATEST_episode_length = {
@@ -102,9 +103,9 @@ public class STVRExperiment {
 	static String[] DDO_targetDoors = { "doorEntrance", "doorKey4",  } ;
 	// orginal experiment:
 	// static int[] DDO_SAruntime = { 1492, 2680 } ;
-	static int[] DDO_SAruntime = { 1538, 2483 } ;
+	//static int[] DDO_SAruntime = { 1538, 2483 } ;
 	// 1-hr runtime, 3000sec, which is then 3600s after 1.2 multiplier:
-	// static int[] DDO_SAruntime = { 3000, 3000  } ;
+	static int[] DDO_SAruntime = { 3000, 3000  } ;
 	
 	// specifying search-depth:
 	static int[] DDO_episode_length = { 9 , 5 } ;
@@ -115,7 +116,7 @@ public class STVRExperiment {
 	static String[] LargeRandom_levels = { 
 	  "FBK_largerandom_R9_cleaned", 
 	  "FBK_largerandom_R9_cleaned",  
-	  "FBK_largerandom_R9_cleaned",   
+	  "FBK_largerandom_R9_cleaned", 
 	  "FBK_largerandom_R9_cleaned",  
 	  "FBK_largerandom_R9_cleaned",  
 	  "FBK_largerandom_R9_cleaned",  
@@ -173,7 +174,7 @@ public class STVRExperiment {
 	} ;
 	*/
 	
-	
+	/*
 	static int[] LargeRandom_SAruntime = {  
 		47,   // d17 solved
 		82,   // d12 solved
@@ -187,7 +188,7 @@ public class STVRExperiment {
 		470,  // d15 not solved
 		445,  // d9  not solved			
 	} ;
-	
+	*/
 	
 
 	// 5 min, for the first three targets:
@@ -201,9 +202,9 @@ public class STVRExperiment {
 	*/
 	
 	// 1-hr runtime, 3000sec, which is then 3600s after 1.2 multiplier:
-    // static int[] LargeRandom_SAruntime = { 
-	// 		3000, 3000, 3000, 3000, 3000,
-	//      3000, 3000, 3000, 3000, 3000 } ;
+    static int[] LargeRandom_SAruntime = { 
+	 		3000, 3000, 3000, 3000, 3000,
+	        3000, 3000, 3000, 3000, 3000 } ;
 	
 	
 	// specifying search-depth:
@@ -624,7 +625,9 @@ public class STVRExperiment {
 			calculateTotalAreaCoverage(targetLevels[0],dir,resultFileName,visitedTilesInfoGrrrr) ;	
 		}
 		
-		writelnToFile(dir,resultFileName,">>>> END experiment. Tot. time: " + totTime + " secs",true) ;
+		float hrs = (float) totTime / 3600f ;
+		writelnToFile(dir,resultFileName,">>>> END experiment. Tot. time: " + totTime + " secs ("
+				+ hrs + " hrs)", true) ;
 
 		// now this is every run's repsonsibility:
 		//labRecruitsBinding.close();
@@ -654,7 +657,7 @@ public class STVRExperiment {
 					// visits of alg's run-r on target 0:
 					var V0 = totalVisits_perAlg.get(alg).get(runNr) ;
 					// visits of alg's run-r on target targetNr:
-					var V1 = visits_on_lev.get(targetNr) ;
+					var V1 = visits_on_lev.get(runNr) ;
 					// add V on that of target-0:
 					V0.addAll(V1) ;
 				}

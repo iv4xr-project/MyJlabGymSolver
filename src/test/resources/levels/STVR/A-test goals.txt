@@ -1,0 +1,8 @@
+BM2021_diff1_R3_1_1_H  --> door3
+BM2021_diff1_R4_1_1   -->  door6
+BM2021_diff1_R4_1_1_M  --> door5
+BM2021_diff2_R5_2_2_M   --> door4
+BM2021_diff2_R7_2_2   --> door6
+BM2021_diff3_R4_2_2    --> door6
+BM2021_diff3_R4_2_2_M   --> door3
+BM2021_diff3_R7_3_3   --> door6
