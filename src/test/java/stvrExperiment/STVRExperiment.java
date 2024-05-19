@@ -82,8 +82,8 @@ public class STVRExperiment {
 	
 	/*
 	static int[] ATEST_SAruntime = { 
-		75, 107, 135, 160, 
-		135, 379, 127, 215 } ;
+		77, 138, 221, 202, 
+		253, 66, 179, 206 } ;
 	*/
 	
 	// 10-mim runtime, 500sec, which is then 600s after 1.2 multiplier:
@@ -103,7 +103,7 @@ public class STVRExperiment {
 	static String[] DDO_targetDoors = { "doorEntrance", "doorKey4",  } ;
 	// orginal experiment:
 	// static int[] DDO_SAruntime = { 1492, 2680 } ;
-	//static int[] DDO_SAruntime = { 1538, 2483 } ;
+	//static int[] DDO_SAruntime = { 1808, 2344 } ;
 	// 1-hr runtime, 3000sec, which is then 3600s after 1.2 multiplier:
 	static int[] DDO_SAruntime = { 3000, 3000  } ;
 	
@@ -176,24 +176,20 @@ public class STVRExperiment {
 	
 	/*
 	static int[] LargeRandom_SAruntime = {  
-		47,   // d17 solved
-		82,   // d12 solved
-		162,  // d5  solved
-		333,  // d39 solved
-		460,  // d2  ... mostly Online could not solve
+		53,   // d17 solved
+		108,  // d12 solved
+		733,  // d5  solved
+		239,  // d39 solved
+		189,  // d2  solved, but without heuristic location mostly Online could not solve
 		// ==
-		453,  // d33 Online could not solve 
-		217,  // d16 solved
-		460,  // d30 not solved
-		470,  // d15 not solved
-		445,  // d9  not solved			
-	} ;
+		575,  // d33 solved, but without heur. loc. online could not solve 
+		169,  // d16 solved
+		425,  // d30 mostly solved, but without heur. loc. online could not solve 
+		1389, // d15 not solved
+		468,  // d9  mostly solved, but without heur. loc. online could not solv	
+		} ;
 	*/
-	
-
-	// 5 min, for the first three targets:
-    //static int[] LargeRandom_SAruntime = {  250, 250, 250 } ;
-	
+		
     /*
 	// 10 min
     static int[] LargeRandom_SAruntime = { 
@@ -226,13 +222,13 @@ public class STVRExperiment {
 			4,   // d12 solved
 			5,   // d5  solved
 			6,   // d39 solved
-			11,  // d2  ... mostly Online could not solve
+			11,  // d2  solved
 			// ==
-			8,  // d33 Online could not solve 
+			8,   // d33 solved
 			11,  // d16 solved
-			13,  // d30 not solved
+			13,  // d30 mostly solved
 			15,  // d15 not solved
-			15   // d9  not solved		
+			15   // d9  mostly solved
 	    } ;
 
 		
