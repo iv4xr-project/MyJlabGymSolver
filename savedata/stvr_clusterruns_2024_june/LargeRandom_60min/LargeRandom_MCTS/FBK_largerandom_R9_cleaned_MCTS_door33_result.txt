@@ -1,0 +1,120 @@
+================== run 0, 2024/05/28 16:20:48:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:ACHIEVED
+== runtime(sec):1702
+== #turns      :7194
+== #episodes   :3
+== #connections:122
+==    inferred :2
+==    correct  :2
+==    wrong    :0
+== area-cov    :0.24244186
+================== run 1, 2024/05/28 16:35:52:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:ACHIEVED
+== runtime(sec):903
+== #turns      :3432
+== #episodes   :1
+== #connections:122
+==    inferred :5
+==    correct  :5
+==    wrong    :0
+== area-cov    :0.20116279
+================== run 2, 2024/05/28 16:40:33:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:ACHIEVED
+== runtime(sec):280
+== #turns      :1337
+== #episodes   :1
+== #connections:122
+==    inferred :2
+==    correct  :2
+==    wrong    :0
+== area-cov    :0.16540697
+================== run 3, 2024/05/28 17:48:09:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:X
+== runtime(sec):4056
+== #turns      :16027
+== #episodes   :5
+== #connections:122
+==    inferred :19
+==    correct  :16
+==    wrong    :3
+== area-cov    :0.2880814
+================== run 4, 2024/05/28 18:18:20:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:ACHIEVED
+== runtime(sec):1811
+== #turns      :5640
+== #episodes   :2
+== #connections:122
+==    inferred :4
+==    correct  :4
+==    wrong    :0
+== area-cov    :0.28052327
+================== run 5, 2024/05/28 19:24:23:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:X
+== runtime(sec):3963
+== #turns      :17919
+== #episodes   :7
+== #connections:122
+==    inferred :16
+==    correct  :14
+==    wrong    :2
+== area-cov    :0.26686046
+================== run 6, 2024/05/28 20:30:27:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:X
+== runtime(sec):3963
+== #turns      :14895
+== #episodes   :5
+== #connections:122
+==    inferred :20
+==    correct  :15
+==    wrong    :5
+== area-cov    :0.2988372
+================== run 7, 2024/05/28 21:43:18:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:X
+== runtime(sec):4371
+== #turns      :17972
+== #episodes   :6
+== #connections:122
+==    inferred :15
+==    correct  :14
+==    wrong    :1
+== area-cov    :0.27325583
+================== run 8, 2024/05/28 22:03:34:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:ACHIEVED
+== runtime(sec):1215
+== #turns      :4772
+== #episodes   :2
+== #connections:122
+==    inferred :6
+==    correct  :6
+==    wrong    :0
+== area-cov    :0.23982558
+================== run 9, 2024/05/28 23:07:49:
+== level:FBK_largerandom_R9_cleaned
+== alg :MCTS
+== goal:X
+== runtime(sec):3854
+== #turns      :13141
+== #episodes   :4
+== #connections:122
+==    inferred :15
+==    correct  :13
+==    wrong    :2
+== area-cov    :0.27819768

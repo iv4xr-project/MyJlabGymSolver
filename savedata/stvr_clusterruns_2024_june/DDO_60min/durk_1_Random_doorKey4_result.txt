@@ -1,0 +1,120 @@
+================== run 0, 2024/05/19 08:43:28:
+== level:durk_1
+== alg :Random
+== goal:X
+== runtime(sec):3652
+== #turns      :7072
+== #episodes   :46
+== #connections:29
+==    inferred :26
+==    correct  :20
+==    wrong    :6
+== area-cov    :0.690078
+================== run 1, 2024/05/19 09:15:27:
+== level:durk_1
+== alg :Random
+== goal:X
+== runtime(sec):1919
+== #turns      :4459
+== #episodes   :29
+== #connections:29
+==    inferred :14
+==    correct  :13
+==    wrong    :1
+== area-cov    :0.6181717
+================== run 2, 2024/05/19 10:17:06:
+== level:durk_1
+== alg :Random
+== goal:X
+== runtime(sec):3698
+== #turns      :7978
+== #episodes   :59
+== #connections:29
+==    inferred :23
+==    correct  :19
+==    wrong    :4
+== area-cov    :0.60423636
+================== run 3, 2024/05/19 10:51:57:
+== level:durk_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):2091
+== #turns      :4837
+== #episodes   :36
+== #connections:29
+==    inferred :18
+==    correct  :14
+==    wrong    :4
+== area-cov    :0.49442586
+================== run 4, 2024/05/19 11:53:19:
+== level:durk_1
+== alg :Random
+== goal:X
+== runtime(sec):3681
+== #turns      :7942
+== #episodes   :62
+== #connections:29
+==    inferred :25
+==    correct  :18
+==    wrong    :7
+== area-cov    :0.52619845
+================== run 5, 2024/05/19 12:53:49:
+== level:durk_1
+== alg :Random
+== goal:X
+== runtime(sec):3629
+== #turns      :6715
+== #episodes   :45
+== #connections:29
+==    inferred :20
+==    correct  :17
+==    wrong    :3
+== area-cov    :0.68506134
+================== run 6, 2024/05/19 13:54:17:
+== level:durk_1
+== alg :Random
+== goal:X
+== runtime(sec):3628
+== #turns      :8030
+== #episodes   :60
+== #connections:29
+==    inferred :28
+==    correct  :21
+==    wrong    :7
+== area-cov    :0.55908585
+================== run 7, 2024/05/19 14:54:47:
+== level:durk_1
+== alg :Random
+== goal:X
+== runtime(sec):3629
+== #turns      :6643
+== #episodes   :48
+== #connections:29
+==    inferred :22
+==    correct  :20
+==    wrong    :2
+== area-cov    :0.61538464
+================== run 8, 2024/05/19 15:27:31:
+== level:durk_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):1964
+== #turns      :4720
+== #episodes   :31
+== #connections:29
+==    inferred :21
+==    correct  :16
+==    wrong    :5
+== area-cov    :0.52229655
+================== run 9, 2024/05/19 16:10:30:
+== level:durk_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):2579
+== #turns      :6142
+== #episodes   :37
+== #connections:29
+==    inferred :23
+==    correct  :18
+==    wrong    :5
+== area-cov    :0.68561876

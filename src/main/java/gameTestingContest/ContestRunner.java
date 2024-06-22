@@ -97,7 +97,8 @@ public class ContestRunner implements Callable<Integer> {
         
         LabRecruitsTestServer LRbinding = launchLabRecruits() ;
         var config = new LabRecruitsConfig(levelName,levelsDir) ;
-        
+        LabRecruitsEnvironment env = new LabRecruitsEnvironment(config);
+    	
         final Thread parentThread = Thread.currentThread() ;
         Thread aiThread = new Thread(() -> { 
             long startTime = System.currentTimeMillis() ;
@@ -112,7 +113,7 @@ public class ContestRunner implements Callable<Integer> {
             	// create an instance of LabRecruitsEnvironment; it will bind to the
                 // Lab Recruits instance you launched above. It will also load the
                 // level specified in the passed LR-config:
-            	LabRecruitsEnvironment env = new LabRecruitsEnvironment(config);
+            	//LabRecruitsEnvironment env = new LabRecruitsEnvironment(config);
             	LabRecruitsTestAgent agent = new LabRecruitsTestAgent(agentId) // matches the ID in the CSV file
         				.attachState(new XBelief())
         				.attachEnvironment(env);
@@ -144,6 +145,10 @@ public class ContestRunner implements Callable<Integer> {
                e.printStackTrace(out) ;
                // the AI has crashed. Swallow the exception, but we don't set the 
                // successful-termination flag to true.
+            }
+            finally {
+            	// not closing it here, see notes below:
+            	//env.close() ;
             }
             parentThread.interrupt() ;
         }) ;

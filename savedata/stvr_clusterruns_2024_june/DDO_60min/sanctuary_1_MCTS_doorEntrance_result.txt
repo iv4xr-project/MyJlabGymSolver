@@ -1,0 +1,120 @@
+================== run 0, 2024/05/18 10:50:25:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):3856
+== #turns      :38737
+== #episodes   :13
+== #connections:46
+==    inferred :22
+==    correct  :18
+==    wrong    :4
+== area-cov    :0.4459725
+================== run 1, 2024/05/18 11:57:08:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):4002
+== #turns      :40071
+== #episodes   :14
+== #connections:46
+==    inferred :27
+==    correct  :21
+==    wrong    :6
+== area-cov    :0.63457763
+================== run 2, 2024/05/18 13:00:20:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):3791
+== #turns      :36660
+== #episodes   :12
+== #connections:46
+==    inferred :25
+==    correct  :20
+==    wrong    :5
+== area-cov    :0.63654226
+================== run 3, 2024/05/18 14:09:46:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):4166
+== #turns      :41305
+== #episodes   :14
+== #connections:46
+==    inferred :28
+==    correct  :22
+==    wrong    :6
+== area-cov    :0.6444008
+================== run 4, 2024/05/18 15:13:49:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):3842
+== #turns      :38523
+== #episodes   :14
+== #connections:46
+==    inferred :29
+==    correct  :18
+==    wrong    :11
+== area-cov    :0.4459725
+================== run 5, 2024/05/18 16:18:39:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):3890
+== #turns      :39001
+== #episodes   :14
+== #connections:46
+==    inferred :28
+==    correct  :20
+==    wrong    :8
+== area-cov    :0.6286837
+================== run 6, 2024/05/18 17:24:32:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):3952
+== #turns      :38760
+== #episodes   :13
+== #connections:46
+==    inferred :26
+==    correct  :21
+==    wrong    :5
+== area-cov    :0.6502947
+================== run 7, 2024/05/18 18:31:54:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):4041
+== #turns      :40089
+== #episodes   :15
+== #connections:46
+==    inferred :23
+==    correct  :18
+==    wrong    :5
+== area-cov    :0.4459725
+================== run 8, 2024/05/18 19:35:42:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):3828
+== #turns      :37088
+== #episodes   :13
+== #connections:46
+==    inferred :23
+==    correct  :20
+==    wrong    :3
+== area-cov    :0.6463654
+================== run 9, 2024/05/18 20:41:47:
+== level:sanctuary_1
+== alg :MCTS
+== goal:X
+== runtime(sec):3964
+== #turns      :39399
+== #episodes   :14
+== #connections:46
+==    inferred :25
+==    correct  :20
+==    wrong    :5
+== area-cov    :0.5972495

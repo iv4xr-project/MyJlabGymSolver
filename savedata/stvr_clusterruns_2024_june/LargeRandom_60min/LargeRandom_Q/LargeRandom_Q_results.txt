@@ -1,0 +1,134 @@
+>>>> START experiment LargeRandom_Q2024/05/27 14:55:19
+*********************
+====== FBK_largerandom_R9_cleaned door17 with Q
+== avrg runtime:113.6
+== avrg #turns:701.2
+== avrg #episodes:1.0
+== #solved:10
+== #connections:122
+== #inferred:1.0
+== #correct:1.0
+== #wrong:0.0
+== precision:1.0
+== recall:0.008196721
+== area-cov:0.124273255
+*********************
+====== FBK_largerandom_R9_cleaned door12 with Q
+== avrg runtime:3775.4
+== avrg #turns:13298.5
+== avrg #episodes:9.2
+== #solved:2
+== #connections:122
+== #inferred:9.4
+== #correct:9.0
+== #wrong:0.4
+== precision:0.9574469
+== recall:0.07377049
+== area-cov:0.23555233
+*********************
+====== FBK_largerandom_R9_cleaned door5 with Q
+== avrg runtime:183.9
+== avrg #turns:646.5
+== avrg #episodes:1.0
+== #solved:10
+== #connections:122
+== #inferred:1.0
+== #correct:1.0
+== #wrong:0.0
+== precision:1.0
+== recall:0.008196721
+== area-cov:0.12421512
+*********************
+====== FBK_largerandom_R9_cleaned door39 with Q
+== avrg runtime:3440.0
+== avrg #turns:7741.7
+== avrg #episodes:4.2
+== #solved:4
+== #connections:122
+== #inferred:9.9
+== #correct:9.3
+== #wrong:0.6
+== precision:0.939394
+== recall:0.07622951
+== area-cov:0.23241279
+*********************
+====== FBK_largerandom_R9_cleaned door2 with Q
+== avrg runtime:4203.5
+== avrg #turns:8330.3
+== avrg #episodes:3.7
+== #solved:3
+== #connections:122
+== #inferred:11.0
+== #correct:9.2
+== #wrong:1.8
+== precision:0.8363636
+== recall:0.07540984
+== area-cov:0.23508722
+*********************
+====== FBK_largerandom_R9_cleaned door33 with Q
+== avrg runtime:4399.2
+== avrg #turns:7940.7
+== avrg #episodes:4.0
+== #solved:1
+== #connections:122
+== #inferred:10.4
+== #correct:8.9
+== #wrong:1.5
+== precision:0.8557692
+== recall:0.07295082
+== area-cov:0.23450582
+*********************
+====== FBK_largerandom_R9_cleaned door16 with Q
+== avrg runtime:4271.7
+== avrg #turns:4913.6
+== avrg #episodes:2.6
+== #solved:4
+== #connections:122
+== #inferred:8.3
+== #correct:7.5
+== #wrong:0.8
+== precision:0.90361446
+== recall:0.06147541
+== area-cov:0.21747093
+*********************
+====== FBK_largerandom_R9_cleaned door30 with Q
+== avrg runtime:5975.3
+== avrg #turns:4573.5
+== avrg #episodes:1.8
+== #solved:0
+== #connections:122
+== #inferred:9.1
+== #correct:8.0
+== #wrong:1.1
+== precision:0.8791208
+== recall:0.06557377
+== area-cov:0.22386628
+*********************
+====== FBK_largerandom_R9_cleaned door15 with Q
+== avrg runtime:6777.8
+== avrg #turns:4930.4
+== avrg #episodes:1.6
+== #solved:0
+== #connections:122
+== #inferred:8.0
+== #correct:7.0
+== #wrong:1.0
+== precision:0.875
+== recall:0.057377048
+== area-cov:0.21226744
+*********************
+====== FBK_largerandom_R9_cleaned door9 with Q
+== avrg runtime:7159.0
+== avrg #turns:4843.0
+== avrg #episodes:1.5
+== #solved:1
+== #connections:122
+== #inferred:7.6
+== #correct:6.9
+== #wrong:0.7
+== precision:0.9078948
+== recall:0.05655738
+== area-cov:0.20918605
+*********************
+== tot. area cov of Q 0.31005818
+>>>> END experiment. Tot. time: 403241 secs (112.01139 hrs)

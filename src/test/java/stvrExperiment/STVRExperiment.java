@@ -28,6 +28,56 @@ import leveldefUtil.LRFloorMap;
 import leveldefUtil.LRconnectionLogic;
 import nl.uu.cs.aplib.utils.Pair;
 
+
+/**
+ * This test-class is an experiment-runner. It will run several algorithms to evaluate 
+ * their performance in solving a set of testing tasks on the game Lab Recruits. 
+ * The algorithms:
+ * <ol>
+ *    <li> Random
+ *    <li> Evolutionary algorithm.
+ *    <li> Monte Carlo Search Tree (MTCS)
+ *    <li> Q-learning
+ * </ol>
+ * All algorithms operate on top of automated navigation and exploration provided by
+ * the underlying iv4xr/aplib library. This means these algorithms only need to specify
+ * which button/door it wants to go and interact with; the underlying path-finding
+ * algorithm will guide the test agent to the target item, provided the item's location
+ * is known to the agent (e.g. it saw it few minutes ago), and the agent believes that
+ * the path to the item is clear (e.g. not blocked by a closed door, or a door the agent
+ * believes to be closed).
+ * 
+ * <p>The set of testing tasks are grouped in three groups: ATEST (seven), DDO (two), and 
+ * Large-Random (ten). See the paper for descriptions of these groups.
+ * 
+ * <p>In principle you can set various experiment parameters yourself; they are configured
+ * in this class. The setup below is to run the algorithm with the budget of 10 minutes per
+ * task on ATEST tasks, and one hour per task on DDO and Large-Random.
+ * These are set in {@link #ATEST_SAruntime}, {@link #DDO_SAruntime},
+ * and {@link #LargeRandom_SAruntime}.
+ * Each run is set to be repeated 5 times. This is set in {@link #repeatNumberPerRun}. 
+ * You can change this to e.g. 10 times, or just 2 times if you want to get faster results.
+ * 
+ * <p>For convenience, the experiments are not scripted as a main-method, but as a set
+ * of Junit tests, so that you can run them separately e.g. using Maven test from the
+ * command-line, or from an IDE like Eclipse. The test-methods are:
+ * 
+ * <ol>
+ *    <li>{@link #run_ATEST_experiment_Test()}: this will run the algorithms on the
+ *    ATEST tasks.
+ *    <li>{@link #run_DDO_experiment_Test()}: this will run the algorithms on the
+ *    DDO tasks.
+ *    <li>{@link #run_LargeRandom_experiment_Test()}: this will run the algorithms on the
+ *    Large-Random tasks.
+ * </ol>
+ * 
+ * Results can be found in the data dir in the project-root.
+ * 
+ * <p>By default, the algorithms will run the game Lab Recruits without graphics. If
+ * you want to see the graphics, set the variable useGraphics to true, in the method
+ * {@link #launchLabRcruits()}.
+ * 
+ */
 public class STVRExperiment {
 	
 	// ===== common parameters
@@ -45,9 +95,9 @@ public class STVRExperiment {
 			,"Q"
 	} ;
 	
-	static int repeatNumberPerRun = 10 ;
-	// static int repeatNumberPerRun = 5 ;
-	//static int repeatNumberPerRun = 2 ;
+	//static int repeatNumberPerRun = 10 ;
+	//static int repeatNumberPerRun = 5 ;
+	static int repeatNumberPerRun = 2 ;
 
 	static int[] randomSeeds = { 
 		13, 3713, 255, 24, 999,
@@ -57,12 +107,12 @@ public class STVRExperiment {
 	// ================ ATEST levels =================
 	//static String[] targetLevels = { "buttons_doors_1", "samira_8room" } ;
 	static String[] ATEST_levels = { 
-		"BM2021_diff1_R3_1_1_H"   // minimum solution: 2
+		 "BM2021_diff1_R3_1_1_H"   // minimum solution: 2
 		,"BM2021_diff1_R4_1_1"    // minimum solution: 4
 		,"BM2021_diff1_R4_1_1_M"  // minimum solution: 3
 		,"BM2021_diff2_R5_2_2_M"  // minimum solution: 2
 		,"BM2021_diff2_R7_2_2"    // minimum solution: 4
-		,"BM2021_diff3_R4_2_2"    // minimum solution: 0
+		//,"BM2021_diff3_R4_2_2"    // minimum solution: 0
 		,"BM2021_diff3_R4_2_2_M"  // minimum solution: 4
 		,"BM2021_diff3_R7_3_3" // minimum solution: 2
 	} ;
@@ -70,21 +120,10 @@ public class STVRExperiment {
 	static String[] ATEST_targetDoors = {
 		"door3", // "door1", 
 		"door6", "door5", "door4", 
-		"door6", "door6", "door3", "door6"
+		"door6", 
+		//"door6", 
+		"door3", "door6"
 	} ;
-	
-	/*
-	// runtime of Samira's alg, in seconds, original experiment:
-	static int[] ATEST_SAruntime = { 
-			68, 84, 139, 140, 
-			146, 60, 144, 254 } ;
-	*/
-	
-	/*
-	static int[] ATEST_SAruntime = { 
-		77, 138, 221, 202, 
-		253, 66, 179, 206 } ;
-	*/
 	
 	// 10-mim runtime, 500sec, which is then 600s after 1.2 multiplier:
 	static int[] ATEST_SAruntime = { 
@@ -101,9 +140,6 @@ public class STVRExperiment {
 
 	static String[] DDO_levels = { "sanctuary_1", "durk_1" } ;
 	static String[] DDO_targetDoors = { "doorEntrance", "doorKey4",  } ;
-	// orginal experiment:
-	// static int[] DDO_SAruntime = { 1492, 2680 } ;
-	//static int[] DDO_SAruntime = { 1808, 2344 } ;
 	// 1-hr runtime, 3000sec, which is then 3600s after 1.2 multiplier:
 	static int[] DDO_SAruntime = { 3000, 3000  } ;
 	
@@ -127,7 +163,7 @@ public class STVRExperiment {
 	  } ;
 	
 	/*
-	// Targets from the original experiment:
+	// Targets of the original experiment in the ATEST-paper:
 	static String[] LargeRandom_targetDoors = {
 			  //"door26",  // F1
 			  //"door5",   // F2
@@ -136,8 +172,8 @@ public class STVRExperiment {
 			  "door16",  // F5
 			  "door37",  // F6
 			  "door34",  // F7
-			  "door3",   // F8  unsolvable by Online
-			  "door21",  // F9  unsolvable by Online
+			  "door3",   // F8  
+			  "door21",  // F9  
 			  "door22",  // F10
 			  "door38"   // F11
 			  }  ;
@@ -157,65 +193,10 @@ public class STVRExperiment {
 		"door9"  
 	} ;
 	
-	/*
-	// From the orginal experiment:
-	static int[] LargeRandom_SAruntime = { 
-	   //14,   // F1
-	   //113,  // F2
-	   //954,  // F3
-	   //1045, // F4
-	   1076, // F5
-	   1827, // F6 
-	   1532, 
-	   3000, // one hrs (3000 x 1.2)
-	   3000, // one hrs
-	   1420, // time unknown!
-	   1420 			
-	} ;
-	*/
-	
-	/*
-	static int[] LargeRandom_SAruntime = {  
-		53,   // d17 solved
-		108,  // d12 solved
-		733,  // d5  solved
-		239,  // d39 solved
-		189,  // d2  solved, but without heuristic location mostly Online could not solve
-		// ==
-		575,  // d33 solved, but without heur. loc. online could not solve 
-		169,  // d16 solved
-		425,  // d30 mostly solved, but without heur. loc. online could not solve 
-		1389, // d15 not solved
-		468,  // d9  mostly solved, but without heur. loc. online could not solv	
-		} ;
-	*/
-		
-    /*
-	// 10 min
-    static int[] LargeRandom_SAruntime = { 
-		500, 500, 500, 500, 500,
-		500, 500, 500, 500, 500 } ;
-	*/
-	
 	// 1-hr runtime, 3000sec, which is then 3600s after 1.2 multiplier:
     static int[] LargeRandom_SAruntime = { 
 	 		3000, 3000, 3000, 3000, 3000,
 	        3000, 3000, 3000, 3000, 3000 } ;
-	
-	
-	// specifying search-depth:
-	/*
-	// for the original experiment
-	static int[] LargeRandom_episode_length = { 
-			//2,  // F1
-			//5,  // F2
-			//6,  // F3
-			//8,  // F4
-			11, // F5
-			15, // F6
-			14, 12, 14, 20, 21		
-	    } ;
-	*/
 	
 	static int[] LargeRandom_episode_length = { 
 			2,   // d17 solved
@@ -697,7 +678,7 @@ public class STVRExperiment {
 		hitReturnToContinue() ;
 	}
 	
-	//@Test
+	@Test
 	public void run_ATEST_experiment_Test() throws Exception {
 		runExperiment("ATEST", ATEST_levels, ATEST_targetDoors, "agent0", 
 				ATEST_SAruntime, 

@@ -1,0 +1,101 @@
+>>>> START experiment DDO2024/05/17 12:11:27
+*********************
+====== sanctuary_1 doorEntrance with Random
+== avrg runtime:3294.9
+== avrg #turns:19606.6
+== avrg #episodes:205.5
+== #solved:3
+== #connections:46
+== #inferred:41.5
+== #correct:29.9
+== #wrong:11.6
+== precision:0.72048193
+== recall:0.65
+== area-cov:0.746169
+====== sanctuary_1 doorEntrance with Evo
+== avrg runtime:4472.0
+== avrg #turns:39506.7
+== avrg #episodes:42.8
+== #solved:0
+== #connections:46
+== #inferred:16.2
+== #correct:14.7
+== #wrong:1.5
+== precision:0.90740734
+== recall:0.3195652
+== area-cov:0.45284873
+====== sanctuary_1 doorEntrance with MCTS
+== avrg runtime:3933.2
+== avrg #turns:38963.3
+== avrg #episodes:13.6
+== #solved:0
+== #connections:46
+== #inferred:25.6
+== #correct:19.8
+== #wrong:5.8
+== precision:0.77343744
+== recall:0.43043476
+== area-cov:0.57760316
+====== sanctuary_1 doorEntrance with Q
+== avrg runtime:3964.4
+== avrg #turns:39430.8
+== avrg #episodes:13.0
+== #solved:0
+== #connections:46
+== #inferred:26.2
+== #correct:19.9
+== #wrong:6.3
+== precision:0.7595419
+== recall:0.4326087
+== area-cov:0.5827112
+*********************
+====== durk_1 doorKey4 with Random
+== avrg runtime:3047.0
+== avrg #turns:6453.8
+== avrg #episodes:45.3
+== #solved:3
+== #connections:29
+== #inferred:22.0
+== #correct:17.6
+== #wrong:4.4
+== precision:0.8
+== recall:0.6068966
+== area-cov:0.60005575
+====== durk_1 doorKey4 with Evo
+== avrg runtime:4527.9
+== avrg #turns:25491.2
+== avrg #episodes:18.3
+== #solved:0
+== #connections:29
+== #inferred:10.1
+== #correct:9.8
+== #wrong:0.3
+== precision:0.97029704
+== recall:0.33793104
+== area-cov:0.5545708
+====== durk_1 doorKey4 with MCTS
+== avrg runtime:3849.2
+== avrg #turns:16126.3
+== avrg #episodes:4.3
+== #solved:1
+== #connections:29
+== #inferred:11.9
+== #correct:10.6
+== #wrong:1.3
+== precision:0.89075637
+== recall:0.36551726
+== area-cov:0.60936457
+====== durk_1 doorKey4 with Q
+== avrg runtime:4144.1
+== avrg #turns:13688.9
+== avrg #episodes:3.4
+== #solved:1
+== #connections:29
+== #inferred:10.7
+== #correct:10.2
+== #wrong:0.5
+== precision:0.95327103
+== recall:0.35172412
+== area-cov:0.6004459
+*********************
+>>>> END experiment. Tot. time: 312373 secs

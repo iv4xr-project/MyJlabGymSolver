@@ -1,0 +1,134 @@
+>>>> START experiment LargeRandom_Evo2024/05/27 14:58:24
+*********************
+====== FBK_largerandom_R9_cleaned door17 with Evo
+== avrg runtime:144.0
+== avrg #turns:690.1
+== avrg #episodes:1.0
+== #solved:10
+== #connections:122
+== #inferred:1.0
+== #correct:1.0
+== #wrong:0.0
+== precision:1.0
+== recall:0.008196721
+== area-cov:0.12514535
+*********************
+====== FBK_largerandom_R9_cleaned door12 with Evo
+== avrg runtime:5424.3
+== avrg #turns:21323.2
+== avrg #episodes:58.9
+== #solved:0
+== #connections:122
+== #inferred:10.6
+== #correct:10.2
+== #wrong:0.4
+== precision:0.9622641
+== recall:0.083606556
+== area-cov:0.23956396
+*********************
+====== FBK_largerandom_R9_cleaned door5 with Evo
+== avrg runtime:143.5
+== avrg #turns:695.9
+== avrg #episodes:1.0
+== #solved:10
+== #connections:122
+== #inferred:1.0
+== #correct:1.0
+== #wrong:0.0
+== precision:1.0
+== recall:0.008196721
+== area-cov:0.124273255
+*********************
+====== FBK_largerandom_R9_cleaned door39 with Evo
+== avrg runtime:4970.6
+== avrg #turns:19058.4
+== avrg #episodes:55.1
+== #solved:2
+== #connections:122
+== #inferred:9.9
+== #correct:9.8
+== #wrong:0.1
+== precision:0.98989904
+== recall:0.08032787
+== area-cov:0.23430233
+*********************
+====== FBK_largerandom_R9_cleaned door2 with Evo
+== avrg runtime:3130.6
+== avrg #turns:12168.3
+== avrg #episodes:38.4
+== #solved:8
+== #connections:122
+== #inferred:8.0
+== #correct:7.9
+== #wrong:0.1
+== precision:0.9875
+== recall:0.0647541
+== area-cov:0.21898256
+*********************
+====== FBK_largerandom_R9_cleaned door33 with Evo
+== avrg runtime:4451.7
+== avrg #turns:17049.7
+== avrg #episodes:51.0
+== #solved:3
+== #connections:122
+== #inferred:9.1
+== #correct:9.0
+== #wrong:0.1
+== precision:0.98901093
+== recall:0.07377049
+== area-cov:0.22456396
+*********************
+====== FBK_largerandom_R9_cleaned door16 with Evo
+== avrg runtime:3695.0
+== avrg #turns:13840.4
+== avrg #episodes:45.7
+== #solved:7
+== #connections:122
+== #inferred:8.5
+== #correct:8.4
+== #wrong:0.1
+== precision:0.98823524
+== recall:0.068852454
+== area-cov:0.22014534
+*********************
+====== FBK_largerandom_R9_cleaned door30 with Evo
+== avrg runtime:5451.3
+== avrg #turns:21281.6
+== avrg #episodes:58.1
+== #solved:0
+== #connections:122
+== #inferred:10.5
+== #correct:10.4
+== #wrong:0.1
+== precision:0.99047613
+== recall:0.0852459
+== area-cov:0.23581395
+*********************
+====== FBK_largerandom_R9_cleaned door15 with Evo
+== avrg runtime:5504.9
+== avrg #turns:21533.9
+== avrg #episodes:59.1
+== #solved:0
+== #connections:122
+== #inferred:10.3
+== #correct:10.2
+== #wrong:0.1
+== precision:0.99029124
+== recall:0.083606556
+== area-cov:0.2347093
+*********************
+====== FBK_largerandom_R9_cleaned door9 with Evo
+== avrg runtime:5430.5
+== avrg #turns:21192.6
+== avrg #episodes:58.8
+== #solved:0
+== #connections:122
+== #inferred:10.0
+== #correct:9.9
+== #wrong:0.1
+== precision:0.98999995
+== recall:0.08114754
+== area-cov:0.23037791
+*********************
+== tot. area cov of Evo 0.24944767
+>>>> END experiment. Tot. time: 383516 secs (106.53222 hrs)

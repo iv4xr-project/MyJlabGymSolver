@@ -8,6 +8,8 @@ import java.io.File;
 import java.util.*;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution ;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 import environments.LabRecruitsEnvironment;
 import eu.iv4xr.framework.spatial.Vec3;
@@ -16,6 +18,7 @@ import game.Platform;
 import helperclasses.Util;
 import nl.uu.cs.aplib.utils.Pair;
 
+@Execution(SAME_THREAD)
 public class ContestRunnerTest {
     
     // let's create a mock instance of MyTestingAI, which will only work on the level
@@ -144,9 +147,10 @@ public class ContestRunnerTest {
            ContestRunner.main(args);
         }
         catch(Error e) { }
+        Thread.sleep(5000);
         // test if the report file is indeed created:
-       assertTrue(Util.fileExists(reportFile)) ;
-       System.out.println("Report file: " + reportFile) ;
+        assertTrue(Util.fileExists(reportFile)) ;
+        System.out.println("Report file: " + reportFile) ;
     }
     
     /**
@@ -176,6 +180,7 @@ public class ContestRunnerTest {
            ContestRunner.main(args);
         }
         catch(Error e) { }
+        Thread.sleep(5000);
         // test if the report file is indeed created:
        assertTrue(Util.fileExists(reportFile)) ;
     }
@@ -207,6 +212,7 @@ public class ContestRunnerTest {
            ContestRunner.main(args);
         }
         catch(Error e) { }
+        Thread.sleep(5000);
     }
     
     /**
@@ -237,6 +243,7 @@ public class ContestRunnerTest {
            ContestRunner.main(args);
         }
         catch(Error e) { }
+        Thread.sleep(5000);
     }
     
     @Test
@@ -246,7 +253,8 @@ public class ContestRunnerTest {
         RawContestRunner.levelsDir = Platform.LEVEL_PATH ;
         RawContestRunner.mkAnInstanceOfMyTestingAI = () -> new XXXtestAI() ;
         RawContestRunner.main(null);
-        // no oracle... just checking that this does not crash        
+        // no oracle... just checking that this does not crash     
+        Thread.sleep(5000);
     }
 
 }

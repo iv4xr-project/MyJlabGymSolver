@@ -1,0 +1,134 @@
+>>>> START experiment LargeRandom_Random2024/05/27 14:59:51
+*********************
+====== FBK_largerandom_R9_cleaned door17 with Random
+== avrg runtime:31.4
+== avrg #turns:80.7
+== avrg #episodes:2.0
+== #solved:10
+== #connections:122
+== #inferred:1.0
+== #correct:1.0
+== #wrong:0.0
+== precision:1.0
+== recall:0.008196721
+== area-cov:0.01497093
+*********************
+====== FBK_largerandom_R9_cleaned door12 with Random
+== avrg runtime:1117.4
+== avrg #turns:3402.8
+== avrg #episodes:56.0
+== #solved:10
+== #connections:122
+== #inferred:9.2
+== #correct:7.9
+== #wrong:1.3
+== precision:0.8586957
+== recall:0.0647541
+== area-cov:0.16968024
+*********************
+====== FBK_largerandom_R9_cleaned door5 with Random
+== avrg runtime:45.9
+== avrg #turns:277.3
+== avrg #episodes:2.0
+== #solved:10
+== #connections:122
+== #inferred:1.0
+== #correct:1.0
+== #wrong:0.0
+== precision:1.0
+== recall:0.008196721
+== area-cov:0.049738374
+*********************
+====== FBK_largerandom_R9_cleaned door39 with Random
+== avrg runtime:3023.4
+== avrg #turns:8199.9
+== avrg #episodes:155.8
+== #solved:3
+== #connections:122
+== #inferred:11.1
+== #correct:9.4
+== #wrong:1.7
+== precision:0.84684676
+== recall:0.07704918
+== area-cov:0.19688953
+*********************
+====== FBK_largerandom_R9_cleaned door2 with Random
+== avrg runtime:3244.9
+== avrg #turns:9010.0
+== avrg #episodes:172.6
+== #solved:2
+== #connections:122
+== #inferred:11.7
+== #correct:9.8
+== #wrong:1.9
+== precision:0.83760685
+== recall:0.08032787
+== area-cov:0.19976744
+*********************
+====== FBK_largerandom_R9_cleaned door33 with Random
+== avrg runtime:3320.4
+== avrg #turns:9230.2
+== avrg #episodes:187.3
+== #solved:2
+== #connections:122
+== #inferred:11.6
+== #correct:9.9
+== #wrong:1.7
+== precision:0.8534482
+== recall:0.08114754
+== area-cov:0.20401163
+*********************
+====== FBK_largerandom_R9_cleaned door16 with Random
+== avrg runtime:2663.9
+== avrg #turns:7674.2
+== avrg #episodes:155.7
+== #solved:4
+== #connections:122
+== #inferred:10.1
+== #correct:8.7
+== #wrong:1.4
+== precision:0.86138606
+== recall:0.071311474
+== area-cov:0.18418604
+*********************
+====== FBK_largerandom_R9_cleaned door30 with Random
+== avrg runtime:3659.4
+== avrg #turns:9773.4
+== avrg #episodes:195.6
+== #solved:0
+== #connections:122
+== #inferred:12.4
+== #correct:10.5
+== #wrong:1.9
+== precision:0.8467742
+== recall:0.086065575
+== area-cov:0.20915698
+*********************
+====== FBK_largerandom_R9_cleaned door15 with Random
+== avrg runtime:3651.2
+== avrg #turns:9679.5
+== avrg #episodes:189.0
+== #solved:0
+== #connections:122
+== #inferred:12.5
+== #correct:10.5
+== #wrong:2.0
+== precision:0.84
+== recall:0.086065575
+== area-cov:0.20703489
+*********************
+====== FBK_largerandom_R9_cleaned door9 with Random
+== avrg runtime:3667.4
+== avrg #turns:9772.3
+== avrg #episodes:194.4
+== #solved:0
+== #connections:122
+== #inferred:12.5
+== #correct:10.5
+== #wrong:2.0
+== precision:0.84
+== recall:0.086065575
+== area-cov:0.20991279
+*********************
+== tot. area cov of Random 0.21619186
+>>>> END experiment. Tot. time: 244307 secs (67.86305 hrs)

@@ -1,0 +1,120 @@
+================== run 0, 2024/05/17 13:28:16:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):226
+== #turns      :3102
+== #episodes   :53
+== #connections:6
+==    inferred :7
+==    correct  :5
+==    wrong    :2
+== area-cov    :0.6450512
+================== run 1, 2024/05/17 13:31:04:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):168
+== #turns      :2116
+== #episodes   :22
+== #connections:6
+==    inferred :7
+==    correct  :5
+==    wrong    :2
+== area-cov    :0.6587031
+================== run 2, 2024/05/17 13:32:49:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):104
+== #turns      :1336
+== #episodes   :14
+== #connections:6
+==    inferred :6
+==    correct  :4
+==    wrong    :2
+== area-cov    :0.58361775
+================== run 3, 2024/05/17 13:43:09:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:X
+== runtime(sec):619
+== #turns      :8578
+== #episodes   :101
+== #connections:6
+==    inferred :7
+==    correct  :5
+==    wrong    :2
+== area-cov    :0.67918086
+================== run 4, 2024/05/17 13:45:57:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):168
+== #turns      :2117
+== #episodes   :29
+== #connections:6
+==    inferred :6
+==    correct  :6
+==    wrong    :0
+== area-cov    :0.68600684
+================== run 5, 2024/05/17 13:52:19:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):381
+== #turns      :4968
+== #episodes   :61
+== #connections:6
+==    inferred :8
+==    correct  :6
+==    wrong    :2
+== area-cov    :0.70307165
+================== run 6, 2024/05/17 13:59:47:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):448
+== #turns      :5885
+== #episodes   :90
+== #connections:6
+==    inferred :9
+==    correct  :6
+==    wrong    :3
+== area-cov    :0.6996587
+================== run 7, 2024/05/17 14:05:35:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):347
+== #turns      :4412
+== #episodes   :65
+== #connections:6
+==    inferred :6
+==    correct  :5
+==    wrong    :1
+== area-cov    :0.69624573
+================== run 8, 2024/05/17 14:09:35:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:ACHIEVED
+== runtime(sec):239
+== #turns      :3304
+== #episodes   :42
+== #connections:6
+==    inferred :6
+==    correct  :4
+==    wrong    :2
+== area-cov    :0.69624573
+================== run 9, 2024/05/17 14:20:02:
+== level:BM2021_diff1_R4_1_1
+== alg :Random
+== goal:X
+== runtime(sec):627
+== #turns      :8684
+== #episodes   :118
+== #connections:6
+==    inferred :6
+==    correct  :5
+==    wrong    :1
+== area-cov    :0.7064846
