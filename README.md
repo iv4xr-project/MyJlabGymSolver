@@ -9,22 +9,22 @@ Provided algorithms:
 
    * **Random**: repeatedly alternates between exploring to discover game objects, and randomly choosing a pair _(b,d)_ of button and door; it then toggles _b_ to find out if it opens _d_.
 
-     Implementing class: [`BaseSearchAlgorithm`](./src/main/java/algorithms.BaseSearchAlgorithm.java).
+     Implementing class: [`BaseSearchAlgorithm`](./src/main/java/algorithms/BaseSearchAlgorithm.java).
 
    * **Evo** implements an evolutionary algorithm for automated testing. Each gene in a chromosome is a sequence `navigateTo_(o); intertact_(o)` where o is a button. Exploration is implicitly invoked if at the moment o is not known to the agent. The fitness of a chromosome is maximum if it solves the given testing task. Else the fitness is the number of button-door connections found when the chromosome is executed, plus the number of doors that are open at the end of the execution. Chromosomes are generated offline, without taking into account if they can actually be fully executed. If a chromosome is only partially executable, its fitness is calculated after the last executable gene.
 
-     Implementing class: [`Evolutionary`](./src/main/java/algorithms.Evolutionary.java)
+     Implementing class: [`Evolutionary`](./src/main/java/algorithms/Evolutionary.java)
 
    * **MTCS** implements a reinforcement learning algorithm called Monte Carlo tree search. It is popularly used to train computers to play a board game such as the Go and Hex. The search tree is generated online. At each node _N_ in the search tree, possible actions take the form of a sequence `navigateTo(o);intertact(o)` where o is a button. However, unlike _Evo_ (which is offline), only buttons that are reachable from _N_ are considered. So, every path in the search tree is always executable. The reward of a play is defined the same as the fitness value of _Evo_.
 
-     Implementing class: [`MCTS`](./src/main/java/algorithms.MCTS.java)
+     Implementing class: [`MCTS`](./src/main/java/algorithms/MCTS.java)
 
      The current implementation stops the algorithm as soon as a sequence of steps that completes the given task is found. If you wish to continue the learning, you can modify the termination condition  in the implementation. Note that despite this early termination, each episode still learns from previous ones.
 
    * **Q** implements the Q-learning algorithm. It is a reinforcement learning algorithm. Each 'state' in the Q-table takes the form of a sequence σ of the buttons interacted so far. The table is _incrementally_ populated as the algorithm proceeds. Like _MTCS_, Q is also online. So, when it is in a current state σ, possible actions again take the form of a sequence _a_ = `navigateTo(o);intertact(o)` where o is a button. However, only buttons that are reachable from σ are considered.
    The direct reward of executing _a_ is a maximum value if it solves the given testing task. Else it is _3C + O_ where _C_ is the number of new button-door connections discovered by _a_ and _O_ the number of open doors in the new state minus the number of open doors in σ.
 
-     Implementing class: [`QAlg`](./src/main/java/algorithms.QAlg.java)
+     Implementing class: [`QAlg`](./src/main/java/algorithms/QAlg.java)
 
      As in MCTS, the implementation stops the algorithm as soon as a sequence of actions that completes the given task is found. You can modify the termination condition  in the implementation. Note that despite this early termination, each episode still learns from previous ones.
 
