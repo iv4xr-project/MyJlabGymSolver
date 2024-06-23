@@ -1,7 +1,7 @@
 ## Replication Instructions
 
 Below we will explain to to re-run our "stvr-experiment". The experiment runs several algorithms to evaluate their performance in solving a set of testing tasks on the game [Lab Recruits](https://github.com/iv4xr-project/labrecruits).
-To run the experiment you will need the executable of LabRecruits; the instructions to get them are in a subsection below.
+To run the experiment **you will need the executable of LabRecruits**; the instructions to get them are in a subsection below.
 
 The algorithms evaluated by this experiment are:
 
@@ -10,7 +10,7 @@ The algorithms evaluated by this experiment are:
    * _Monte Carlo Search Tree_ (MTCS).
    * _Q-learning_.
 
-All these algorithms are configured to operate on top of automated navigation and exploration provided by the underlying iv4xr/aplib library. This means these algorithms only need to specify which button/door it wants to go and interact with; the underlying path-finding algorithm will guide the test agent to the target item, provided the item's location is known to the agent (e.g. it saw it few minutes ago), and the agent believes that the path to the item is clear (e.g. not blocked by a closed door, or a door the agent believes to be closed).
+See the project [README](./README.md) for more details about these algorithms.
 
 The set of testing tasks are grouped in three groups: _ATEST_ (seven), _DDO_ (two), and _Large-Random_ (ten). See the paper for descriptions of these groups.
 
@@ -45,12 +45,27 @@ By default, the algorithms will run the game Lab Recruits without graphics. If y
 
 ### Installing Lab Recuits
 
-If you get this project from a replication-zip, it will already contain the Lab Recuits game. Else you can get it from the github home of [Lab Recruits](https://github.com/iv4xr-project/labrecruits). We need version 2.3.3.
+If you get this project from a replication-zip, it will already contain the Lab Recuits game. Else, you need to first install the game Lab Recuits. You can get a pre-compiled executable from the github home of [Lab Recruits](https://github.com/iv4xr-project/labrecruits). We need version 2.3.3.
+If the executables are not there anymore, then you will have to build the game yourself using Unity :) See the README of Lab Recruits for the specific version of Unity that you need.
 
-In the project root, create a directory named `gym`, if it is not already there. Then we need to put Lab Recruits' executable there:
+In the project root, create a directory named `gym`, if it is not already there. Then you need to put Lab Recruits' executable there:
 
-   * Windows: put  LabRecruits.exe and related files in `gym/Windows/bin`.
+```
+(project root)
+   |-- gym
+        |-- Windows
+        |   |-- bin
+        |-- Mac
+            |-- bin
+        |-- Linux  
+            |-- bin   
+```
+   * Windows: put  `LabRecruits.exe` and related files in `gym/Windows/bin`.
    * Mac: put `LabRecruits.app` in `gym/Mac/bin`.
-   * Linux: put LabRecruits executable and related files in `gym/Linux/bin`.
+   * Linux: put `LabRecruits` executable and related files in `gym/Linux/bin`.
 
 After this, you are good to go.
+
+### Saved results
+
+Results from our own runs can be found in `./savedata`.
