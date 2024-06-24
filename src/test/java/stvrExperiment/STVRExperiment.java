@@ -96,8 +96,8 @@ public class STVRExperiment {
 	} ;
 	
 	//static int repeatNumberPerRun = 10 ;
-	//static int repeatNumberPerRun = 5 ;
-	static int repeatNumberPerRun = 2 ;
+	static int repeatNumberPerRun = 5 ;
+	//static int repeatNumberPerRun = 2 ;
 
 	static int[] randomSeeds = { 
 		13, 3713, 255, 24, 999,
